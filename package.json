@@ -1,0 +1,40 @@
+{
+  "name": "expo-record-codegen",
+  "version": "0.1.0",
+  "description": "A Node.js library with CLI for code generation",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "expo-record-codegen": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "build:cli": "bun build src/cli.ts --outdir dist --target node",
+    "build:all": "bun run build && bun run build:cli",
+    "test": "bun test",
+    "dev": "bun --watch src/index.ts",
+    "type-check": "bunx tsc --noEmit",
+    "lint": "biome lint src",
+    "lint:fix": "biome lint src --write",
+    "format": "biome format src --write",
+    "format:check": "biome format src",
+    "check": "biome check src",
+    "check:fix": "biome check src --write"
+  },
+  "keywords": [
+    "node",
+    "cli",
+    "library",
+    "typescript"
+  ],
+  "author": "Chris Green",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "2.1.4",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {}
+}
