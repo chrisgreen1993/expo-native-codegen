@@ -1,6 +1,19 @@
 # Expo Record CodeGen
 
-A Node.js library and CLI tool built with Bun.
+A Node.js library and CLI tool for generating Expo Record classes from TypeScript interfaces.
+
+## Problem
+
+When creating Expo Native Modules, developers must manually write:
+1. TypeScript interfaces (for JS side)
+2. Swift Record classes (for iOS)
+3. Kotlin Record classes (for Android)
+
+This is repetitive, error-prone, and time-consuming work.
+
+## Solution
+
+This library generates Swift and Kotlin Record classes from TypeScript interfaces automatically.
 
 ## Setup
 
@@ -19,10 +32,42 @@ bun run build:all
 ### As a Library
 
 ```typescript
-import { hello, greet } from 'expo-record-codegen';
+import { generateSwiftRecords, generateKotlinRecords } from 'expo-record-codegen';
 
-console.log(hello()); // "Hello from expo-record-codegen library!"
-console.log(greet("World")); // "Hello, World! Welcome to expo-record-codegen."
+const typescriptCode = `
+export interface GeneratedRecord {
+  propertyName: string;
+  optionalProperty?: string;
+}
+`;
+
+// Generate Swift Records
+const swiftCode = generateSwiftRecords(typescriptCode);
+console.log(swiftCode);
+// Output:
+// // Generated Swift Records
+// // TODO: Parse TypeScript interfaces and generate Swift Records
+// public struct GeneratedRecord: Record {
+//   @Field
+//   var propertyName: String = "default"
+//   
+//   @Field
+//   var optionalProperty: String? = nil
+// }
+
+// Generate Kotlin Records  
+const kotlinCode = generateKotlinRecords(typescriptCode);
+console.log(kotlinCode);
+// Output:
+// // Generated Kotlin Records
+// // TODO: Parse TypeScript interfaces and generate Kotlin Records
+// class GeneratedRecord : Record {
+//   @Field
+//   val propertyName: String = "default"
+//   
+//   @Field
+//   val optionalProperty: String? = null
+// }
 ```
 
 ### As a CLI

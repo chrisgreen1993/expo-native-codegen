@@ -1,0 +1,49 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`Code generation functions should generate Swift Records 1`] = `
+"// Generated Swift Records
+// TODO: Parse TypeScript interfaces and generate Swift Records
+public struct GeneratedRecord: Record {
+	@Field
+	var propertyName: String = "default"
+	
+	@Field
+	var optionalProperty: String? = nil
+}"
+`;
+
+exports[`Code generation functions should generate Kotlin Records 1`] = `
+"// Generated Kotlin Records
+// TODO: Parse TypeScript interfaces and generate Kotlin Records
+class GeneratedRecord : Record {
+	@Field
+	val propertyName: String = "default"
+	
+	@Field
+	val optionalProperty: String? = null
+}"
+`;
+
+exports[`Code generation functions should handle empty TypeScript code 1`] = `
+"// Generated Swift Records
+// TODO: Parse TypeScript interfaces and generate Swift Records
+public struct GeneratedRecord: Record {
+	@Field
+	var propertyName: String = "default"
+	
+	@Field
+	var optionalProperty: String? = nil
+}"
+`;
+
+exports[`Code generation functions should handle empty TypeScript code 2`] = `
+"// Generated Kotlin Records
+// TODO: Parse TypeScript interfaces and generate Kotlin Records
+class GeneratedRecord : Record {
+	@Field
+	val propertyName: String = "default"
+	
+	@Field
+	val optionalProperty: String? = null
+}"
+`;
