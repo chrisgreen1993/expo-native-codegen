@@ -16,8 +16,8 @@
     "type-check": "bunx tsc --noEmit",
     "lint": "biome lint src",
     "lint:fix": "biome lint src --write",
-    "format": "biome format src --write",
-    "format:check": "biome format src",
+    "format": "biome format src",
+    "format:fix": "biome format src --write",
     "check": "biome check src",
     "check:fix": "biome check src --write"
   },

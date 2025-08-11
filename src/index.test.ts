@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { generateSwiftRecords, generateKotlinRecords } from "./index";
+import { generateKotlinRecords, generateSwiftRecords } from "./index";
 
 describe("Code generation functions", () => {
 	const sampleTypeScript = `
