@@ -9,6 +9,7 @@ This document defines the mapping between TypeScript types and their correspondi
 | `string`             | `String`           | `String`                 | UTF-8 string                                                  |
 | `number`             | `Double` / `Int`   | `Double` / `Int` / `Float` | Use `Int`/`Int64` for integers, `Double`/`Float` for floats  |
 | `boolean`            | `Bool`             | `Boolean`                | True/false value                                              |
+| `any`                | `Any`              | `Any`                    | Generic/unknown type (use with caution)                      |
 | `string[]`           | `[String]`         | `List<String>`            | Array of strings                                              |
 | `number[]`           | `[Int]` / `[Double]` | `List<Int>` / `List<Double>` | Array of numbers                                              |
 | `boolean[]`          | `[Bool]`           | `List<Boolean>`           | Array of booleans                                             |
@@ -50,6 +51,9 @@ export interface ExampleRecord {
   age: number;
   height: number;
   isActive: boolean;
+  
+  // Generic type
+  genericData: any;
   
   // Array types
   tags: string[];
@@ -112,6 +116,10 @@ public struct ExampleRecord: Record {
   
   @Field
   var isActive: Bool = false
+  
+  // Generic type
+  @Field
+  var genericData: Any = [:]
   
   // Array types
   @Field
@@ -195,6 +203,10 @@ class ExampleRecord : Record {
   
   @Field
   val isActive: Boolean = false
+  
+  // Generic type
+  @Field
+  val genericData: Any = mapOf()
   
   // Array types
   @Field
