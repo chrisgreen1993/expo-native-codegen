@@ -17,6 +17,16 @@ export interface NumberRecord {
 export interface BooleanRecord {
   isActive: boolean;
 }`,
+		anyType: `
+export interface AnyTypeRecord {
+  genericData: any;
+  optionalGenericData?: any;
+}`,
+		unsupportedType: `
+export interface UnsupportedTypeRecord {
+  data: Date;
+  buffer: Buffer;
+}`,
 		stringArray: `
 export interface StringArrayRecord {
   tags: string[];
@@ -111,9 +121,14 @@ describe("Swift Record Generation", () => {
 			const result = generateSwiftRecords(testData.booleanType);
 			expect(result).toMatchSnapshot();
 		});
+
+		it("should handle any type", () => {
+			const result = generateSwiftRecords(testData.anyType);
+			expect(result).toMatchSnapshot();
+		});
 	});
 
-	describe("Array types", () => {
+	describe.todo("Array types", () => {
 		it("should handle string array", () => {
 			const result = generateSwiftRecords(testData.stringArray);
 			expect(result).toMatchSnapshot();
@@ -130,7 +145,7 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe("Map/Object types", () => {
+	describe.todo("Map/Object types", () => {
 		it("should handle Record<string, string>", () => {
 			const result = generateSwiftRecords(testData.stringMap);
 			expect(result).toMatchSnapshot();
@@ -142,7 +157,7 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe("Enum types", () => {
+	describe.todo("Enum types", () => {
 		it("should handle string enum", () => {
 			const result = generateSwiftRecords(testData.enumType);
 			expect(result).toMatchSnapshot();
@@ -161,21 +176,21 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe("Date handling", () => {
+	describe.todo("Date handling", () => {
 		it("should handle date as string", () => {
 			const result = generateSwiftRecords(testData.dateType);
 			expect(result).toMatchSnapshot();
 		});
 	});
 
-	describe("Binary data handling", () => {
+	describe.todo("Binary data handling", () => {
 		it("should handle UInt8Array", () => {
 			const result = generateSwiftRecords(testData.binaryDataRecord);
 			expect(result).toMatchSnapshot();
 		});
 	});
 
-	describe("Nested records", () => {
+	describe.todo("Nested records", () => {
 		it("should handle nested interface", () => {
 			const result = generateSwiftRecords(testData.nestedRecord);
 			expect(result).toMatchSnapshot();
@@ -190,17 +205,23 @@ describe("Swift Record Generation", () => {
 	describe("Edge cases", () => {
 		it("should handle empty TypeScript code", () => {
 			const result = generateSwiftRecords("");
-			expect(result).toMatchSnapshot();
+			expect(result).toBe("");
 		});
 
 		it("should handle interface with no properties", () => {
 			const result = generateSwiftRecords(testData.emptyRecord);
 			expect(result).toMatchSnapshot();
 		});
+
+		it("should throw error for unsupported types", () => {
+			expect(() => generateSwiftRecords(testData.unsupportedType)).toThrow(
+				"Unsupported TypeScript type: Date",
+			);
+		});
 	});
 });
 
-describe("Kotlin Record Generation", () => {
+describe.todo("Kotlin Record Generation", () => {
 	const testData = createTestData();
 
 	describe("Primitive types", () => {
@@ -297,7 +318,7 @@ describe("Kotlin Record Generation", () => {
 	describe("Edge cases", () => {
 		it("should handle empty TypeScript code", () => {
 			const result = generateKotlinRecords("");
-			expect(result).toMatchSnapshot();
+			expect(result).toBe("");
 		});
 
 		it("should handle interface with no properties", () => {

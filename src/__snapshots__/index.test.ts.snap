@@ -10,8 +10,8 @@ exports[`Swift Record Generation Primitive types should handle string type 1`] =
 exports[`Swift Record Generation Primitive types should handle number type 1`] = `
 "public struct NumberRecord: Record {
   @Field
-  var age: Int = 0
-  
+  var age: Double = 0.0
+
   @Field
   var height: Double = 0.0
 }"
@@ -21,6 +21,16 @@ exports[`Swift Record Generation Primitive types should handle boolean type 1`] 
 "public struct BooleanRecord: Record {
   @Field
   var isActive: Bool = false
+}"
+`;
+
+exports[`Swift Record Generation Primitive types should handle any type 1`] = `
+"public struct AnyTypeRecord: Record {
+  @Field
+  var genericData: Any = [:]
+
+  @Field
+  var optionalGenericData: Any? = nil
 }"
 `;
 
@@ -75,7 +85,7 @@ exports[`Swift Record Generation Optional types should handle optional string 1`
 "public struct OptionalRecord: Record {
   @Field
   var name: String = ""
-  
+
   @Field
   var description: String? = nil
 }"
@@ -84,10 +94,10 @@ exports[`Swift Record Generation Optional types should handle optional string 1`
 exports[`Swift Record Generation Optional types should handle optional number 1`] = `
 "public struct OptionalNumberRecord: Record {
   @Field
-  var age: Int = 0
-  
+  var age: Double = 0.0
+
   @Field
-  var height: Int? = nil
+  var height: Double? = nil
 }"
 `;
 
@@ -122,9 +132,7 @@ public struct NestedRecord: Record {
 exports[`Swift Record Generation Edge cases should handle empty TypeScript code 1`] = `
 ""`;
 
-exports[`Swift Record Generation Edge cases should handle interface with no properties 1`] = `
-"public struct EmptyRecord: Record {
-}"`;
+exports[`Swift Record Generation Edge cases should handle interface with no properties 1`] = `"public struct EmptyRecord: Record {}"`;
 
 exports[`Kotlin Record Generation Primitive types should handle string type 1`] = `
 "class StringRecord : Record {
@@ -136,7 +144,7 @@ exports[`Kotlin Record Generation Primitive types should handle string type 1`] 
 exports[`Kotlin Record Generation Primitive types should handle number type 1`] = `
 "class NumberRecord : Record {
   @Field
-  val age: Int = 0
+  val age: Double = 0.0
   
   @Field
   val height: Double = 0.0
@@ -160,7 +168,7 @@ exports[`Kotlin Record Generation Array types should handle string array 1`] = `
 exports[`Kotlin Record Generation Array types should handle number array 1`] = `
 "class NumberArrayRecord : Record {
   @Field
-  val scores: List<Int> = listOf()
+  val scores: List<Double> = listOf()
 }"
 `;
 
@@ -210,10 +218,10 @@ exports[`Kotlin Record Generation Optional types should handle optional string 1
 exports[`Kotlin Record Generation Optional types should handle optional number 1`] = `
 "class OptionalNumberRecord : Record {
   @Field
-  val age: Int = 0
+  val age: Double = 0
   
   @Field
-  val height: Int? = null
+  val height: Double? = null
 }"
 `;
 
