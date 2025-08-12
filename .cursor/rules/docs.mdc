@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+Make sure to read the documentation files in the `docs/` directory to understand the project goals and type mappings:
+
+- `docs/project.md` - Project overview and goals
+- `docs/types.md` - TypeScript to Swift/Kotlin type mapping for Expo Records
+
+These files provide essential context for understanding what this code generation library does and how it maps types between languages.
