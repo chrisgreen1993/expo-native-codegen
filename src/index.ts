@@ -4,27 +4,23 @@
 
 export function generateSwiftRecords(_typescriptCode: string): string {
 	// TODO: Implement Swift Record generation
-	return `// Generated Swift Records
-// TODO: Parse TypeScript interfaces and generate Swift Records
-public struct GeneratedRecord: Record {
+	// This stub will make tests fail, driving TDD implementation
+	return `// STUB: NOT IMPLEMENTED YET
+// This should fail all tests until properly implemented
+public struct StubRecord: Record {
 	@Field
-	var propertyName: String = "default"
-	
-	@Field
-	var optionalProperty: String? = nil
+	var notImplemented: String = "stub"
 }`;
 }
 
 export function generateKotlinRecords(_typescriptCode: string): string {
 	// TODO: Implement Kotlin Record generation
-	return `// Generated Kotlin Records
-// TODO: Parse TypeScript interfaces and generate Kotlin Records
-class GeneratedRecord : Record {
+	// This stub will make tests fail, driving TDD implementation
+	return `// STUB: NOT IMPLEMENTED YET
+// This should fail all tests until properly implemented
+class StubRecord : Record {
 	@Field
-	val propertyName: String = "default"
-	
-	@Field
-	val optionalProperty: String? = null
+	val notImplemented: String = "stub"
 }`;
 }
 

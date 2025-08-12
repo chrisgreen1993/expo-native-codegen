@@ -1,49 +1,311 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`Code generation functions should generate Swift Records 1`] = `
-"// Generated Swift Records
-// TODO: Parse TypeScript interfaces and generate Swift Records
-public struct GeneratedRecord: Record {
-	@Field
-	var propertyName: String = "default"
-	
-	@Field
-	var optionalProperty: String? = nil
+exports[`Swift Record Generation Primitive types should handle string type 1`] = `
+"public struct StringRecord: Record {
+  @Field
+  var name: String = ""
 }"
 `;
 
-exports[`Code generation functions should generate Kotlin Records 1`] = `
-"// Generated Kotlin Records
-// TODO: Parse TypeScript interfaces and generate Kotlin Records
-class GeneratedRecord : Record {
-	@Field
-	val propertyName: String = "default"
-	
-	@Field
-	val optionalProperty: String? = null
+exports[`Swift Record Generation Primitive types should handle number type 1`] = `
+"public struct NumberRecord: Record {
+  @Field
+  var age: Int = 0
+  
+  @Field
+  var height: Double = 0.0
 }"
 `;
 
-exports[`Code generation functions should handle empty TypeScript code 1`] = `
-"// Generated Swift Records
-// TODO: Parse TypeScript interfaces and generate Swift Records
-public struct GeneratedRecord: Record {
-	@Field
-	var propertyName: String = "default"
-	
-	@Field
-	var optionalProperty: String? = nil
+exports[`Swift Record Generation Primitive types should handle boolean type 1`] = `
+"public struct BooleanRecord: Record {
+  @Field
+  var isActive: Bool = false
 }"
 `;
 
-exports[`Code generation functions should handle empty TypeScript code 2`] = `
-"// Generated Kotlin Records
-// TODO: Parse TypeScript interfaces and generate Kotlin Records
-class GeneratedRecord : Record {
-	@Field
-	val propertyName: String = "default"
-	
-	@Field
-	val optionalProperty: String? = null
+exports[`Swift Record Generation Array types should handle string array 1`] = `
+"public struct StringArrayRecord: Record {
+  @Field
+  var tags: [String] = []
 }"
 `;
+
+exports[`Swift Record Generation Array types should handle number array 1`] = `
+"public struct NumberArrayRecord: Record {
+  @Field
+  var scores: [Int] = []
+}"
+`;
+
+exports[`Swift Record Generation Array types should handle boolean array 1`] = `
+"public struct BooleanArrayRecord: Record {
+  @Field
+  var flags: [Bool] = []
+}"
+`;
+
+exports[`Swift Record Generation Map/Object types should handle Record<string, string> 1`] = `
+"public struct StringMapRecord: Record {
+  @Field
+  var metadata: [String: String] = [:]
+}"
+`;
+
+exports[`Swift Record Generation Map/Object types should handle Record<string, any> 1`] = `
+"public struct AnyMapRecord: Record {
+  @Field
+  var config: [String: Any] = [:]
+}"
+`;
+
+exports[`Swift Record Generation Enum types should handle string enum 1`] = `
+"enum Status: String, Enumerable {
+  case pending = "pending"
+  case active = "active"
+}
+
+public struct EnumRecord: Record {
+  @Field
+  var status: Status = .pending
+}"
+`;
+
+exports[`Swift Record Generation Optional types should handle optional string 1`] = `
+"public struct OptionalRecord: Record {
+  @Field
+  var name: String = ""
+  
+  @Field
+  var description: String? = nil
+}"
+`;
+
+exports[`Swift Record Generation Optional types should handle optional number 1`] = `
+"public struct OptionalNumberRecord: Record {
+  @Field
+  var age: Int = 0
+  
+  @Field
+  var height: Int? = nil
+}"
+`;
+
+exports[`Swift Record Generation Date handling should handle date as string 1`] = `
+"public struct DateRecord: Record {
+  @Field
+  var createdAt: String = "" // ISO 8601 date string
+  
+  @Field
+  var lastLogin: String? = nil // Optional ISO 8601 date string
+}"
+`;
+
+exports[`Swift Record Generation Nested records should handle nested interface 1`] = `
+"public struct Address: Record {
+  @Field
+  var street: String = ""
+  
+  @Field
+  var city: String = ""
+}
+
+public struct NestedRecord: Record {
+  @Field
+  var name: String = ""
+  
+  @Field
+  var address: Address = Address()
+}"
+`;
+
+exports[`Swift Record Generation Edge cases should handle empty TypeScript code 1`] = `
+""`;
+
+exports[`Swift Record Generation Edge cases should handle interface with no properties 1`] = `
+"public struct EmptyRecord: Record {
+}"`;
+
+exports[`Kotlin Record Generation Primitive types should handle string type 1`] = `
+"class StringRecord : Record {
+  @Field
+  val name: String = ""
+}"
+`;
+
+exports[`Kotlin Record Generation Primitive types should handle number type 1`] = `
+"class NumberRecord : Record {
+  @Field
+  val age: Int = 0
+  
+  @Field
+  val height: Double = 0.0
+}"
+`;
+
+exports[`Kotlin Record Generation Primitive types should handle boolean type 1`] = `
+"class BooleanRecord : Record {
+  @Field
+  val isActive: Boolean = false
+}"
+`;
+
+exports[`Kotlin Record Generation Array types should handle string array 1`] = `
+"class StringArrayRecord : Record {
+  @Field
+  val tags: List<String> = listOf()
+}"
+`;
+
+exports[`Kotlin Record Generation Array types should handle number array 1`] = `
+"class NumberArrayRecord : Record {
+  @Field
+  val scores: List<Int> = listOf()
+}"
+`;
+
+exports[`Kotlin Record Generation Array types should handle boolean array 1`] = `
+"class BooleanArrayRecord : Record {
+  @Field
+  val flags: List<Boolean> = listOf()
+}"
+`;
+
+exports[`Kotlin Record Generation Map/Object types should handle Record<string, string> 1`] = `
+"class StringMapRecord : Record {
+  @Field
+  val metadata: Map<String, String> = mapOf()
+}"
+`;
+
+exports[`Kotlin Record Generation Map/Object types should handle Record<string, any> 1`] = `
+"class AnyMapRecord : Record {
+  @Field
+  val config: Map<String, Any> = mapOf()
+}"
+`;
+
+exports[`Kotlin Record Generation Enum types should handle string enum 1`] = `
+"enum class Status(val value: String) : Enumerable {
+  PENDING("pending"),
+  ACTIVE("active")
+}
+
+class EnumRecord : Record {
+  @Field
+  val status: Status = Status.PENDING
+}"
+`;
+
+exports[`Kotlin Record Generation Optional types should handle optional string 1`] = `
+"class OptionalRecord : Record {
+  @Field
+  val name: String = ""
+  
+  @Field
+  val description: String? = null
+}"
+`;
+
+exports[`Kotlin Record Generation Optional types should handle optional number 1`] = `
+"class OptionalNumberRecord : Record {
+  @Field
+  val age: Int = 0
+  
+  @Field
+  val height: Int? = null
+}"
+`;
+
+exports[`Kotlin Record Generation Date handling should handle date as string 1`] = `
+"class DateRecord : Record {
+  @Field
+  val createdAt: String = "" // ISO 8601 date string
+  
+  @Field
+  val lastLogin: String? = null // Optional ISO 8601 date string
+}"
+`;
+
+exports[`Kotlin Record Generation Nested records should handle nested interface 1`] = `
+"class Address : Record {
+  @Field
+  val street: String = ""
+  
+  @Field
+  val city: String = ""
+}
+
+class NestedRecord : Record {
+  @Field
+  val name: String = ""
+  
+  @Field
+  val address: Address = Address()
+}"
+`;
+
+exports[`Kotlin Record Generation Edge cases should handle empty TypeScript code 1`] = `
+""`;
+
+exports[`Kotlin Record Generation Edge cases should handle interface with no properties 1`] = `
+"class EmptyRecord : Record {
+}"`;
+
+exports[`Swift Record Generation Nested records should handle nested interface array 1`] = `
+"public struct Address: Record {
+  @Field
+  var street: String = ""
+  
+  @Field
+  var city: String = ""
+}
+
+public struct NestedArrayRecord: Record {
+  @Field
+  var name: String = ""
+  
+  @Field
+  var addresses: [Address] = []
+}"`;
+
+exports[`Kotlin Record Generation Nested records should handle nested interface array 1`] = `
+"class Address : Record {
+  @Field
+  val street: String = ""
+  
+  @Field
+  val city: String = ""
+}
+
+class NestedArrayRecord : Record {
+  @Field
+  val name: String = ""
+  
+  @Field
+  val addresses: List<Address> = listOf()
+}"`;
+
+exports[`Swift Record Generation Binary data handling should handle UInt8Array 1`] = `
+"public struct BinaryDataRecord: Record {
+  @Field
+  var name: String = ""
+  
+  @Field
+  var data: Data = Data()
+  
+  @Field
+  var optionalData: Data? = nil
+}"`;
+
+exports[`Kotlin Record Generation Binary data handling should handle UInt8Array 1`] = `
+"class BinaryDataRecord : Record {
+  @Field
+  val name: String = ""
+  
+  @Field
+  val data: ByteArray = ByteArray(0)
+  
+  @Field
+  val optionalData: ByteArray? = null
+}"`;

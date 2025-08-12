@@ -12,11 +12,13 @@ This document defines the mapping between TypeScript types and their correspondi
 | `string[]`           | `[String]`         | `List<String>`            | Array of strings                                              |
 | `number[]`           | `[Int]` / `[Double]` | `List<Int>` / `List<Double>` | Array of numbers                                              |
 | `boolean[]`          | `[Bool]`           | `List<Boolean>`           | Array of booleans                                             |
+| `T[]` (nested records) | `[RecordType]`     | `List<RecordType>`        | Array of nested record types                                  |
 | `object` (dictionary) | `[String: Any]`    | `Map<String, Any>`        | Only serializable types supported                             |
 | `Record<string, T>`  | `[String: T]`      | `Map<String, T>`          | Typed map with specific value type                            |
 | `enum` (string)      | `EnumType: String` | `EnumType : String`       | Use Swift/Kotlin enum types                                   |
 | `null` / `undefined` | `T?`               | `T?`                      | Use optional types                                            |
 | `Date` (ISO string)  | `String`           | `String`                  | Generally represented as ISO 8601 string                      |
+| `UInt8Array`         | `Data`             | `ByteArray`               | Binary data representation                                   |
 | Nested Record        | `RecordType`       | `RecordType`              | Must conform to Record protocol/interface                     |
 
 ## Type Modifiers
@@ -54,6 +56,9 @@ export interface ExampleRecord {
   scores: number[];
   flags: boolean[];
   
+  // Nested array types
+  addresses: Address[];
+  
   // Map/Object types
   metadata: Record<string, string>;
   config: Record<string, any>;
@@ -67,6 +72,9 @@ export interface ExampleRecord {
   
   // Date as ISO string
   createdAt: string; // ISO 8601 date string
+  
+  // Binary data
+  imageData: UInt8Array;
   
   // Nested Record
   address: Address;
@@ -115,6 +123,10 @@ public struct ExampleRecord: Record {
   @Field
   var flags: [Bool] = []
   
+  // Nested array types
+  @Field
+  var addresses: [Address] = []
+  
   // Map/Object types
   @Field
   var metadata: [String: String] = [:]
@@ -136,6 +148,10 @@ public struct ExampleRecord: Record {
   // Date as ISO string
   @Field
   var createdAt: String = "" // ISO 8601 date string
+  
+  // Binary data
+  @Field
+  var imageData: Data = Data()
   
   // Nested Record
   @Field
@@ -190,6 +206,10 @@ class ExampleRecord : Record {
   @Field
   val flags: List<Boolean> = listOf()
   
+  // Nested array types
+  @Field
+  val addresses: List<Address> = listOf()
+  
   // Map/Object types
   @Field
   val metadata: Map<String, String> = mapOf()
@@ -211,6 +231,10 @@ class ExampleRecord : Record {
   // Date as ISO string
   @Field
   val createdAt: String = "" // ISO 8601 date string
+  
+  // Binary data
+  @Field
+  val imageData: ByteArray = ByteArray(0)
   
   // Nested Record
   @Field
@@ -236,3 +260,5 @@ class Address : Record {
   val zipCode: String = ""
 }
 ```
+
+
