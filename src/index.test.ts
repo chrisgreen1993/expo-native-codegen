@@ -26,8 +26,7 @@ export interface AnyTypeRecord {
 }`,
 		unsupportedType: `
 export interface UnsupportedTypeRecord {
-  data: Date;
-  buffer: Buffer;
+  unsupportedType: ThisIsNotSupported;
 }`,
 		stringArray: `
 export interface StringArrayRecord {
@@ -276,7 +275,7 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe.todo("Nested records", () => {
+	describe("Nested records", () => {
 		it("should handle nested interface", () => {
 			const result = generateSwiftRecords(testData.nestedRecord);
 			expect(result).toMatchInlineSnapshot(`
@@ -335,7 +334,7 @@ describe("Swift Record Generation", () => {
 
 		it("should throw error for unsupported types", () => {
 			expect(() => generateSwiftRecords(testData.unsupportedType)).toThrow(
-				"Unsupported TypeScript type: Date",
+				"Unsupported TypeScript type: ThisIsNotSupported",
 			);
 		});
 	});

@@ -1,5 +1,9 @@
 import { type InterfaceDeclaration, Project, type Type } from "ts-morph";
 
+function getTypeName(type: Type): string {
+	return type.getSymbol()?.getName() || type.getText();
+}
+
 /**
  * Parse TypeScript code and extract all interface declarations
  */
@@ -39,7 +43,7 @@ function mapTypeScriptToSwiftType(propertyType: Type): string {
 	}
 
 	// Get the base type name
-	const typeName = propertyType.getText();
+	const typeName = getTypeName(propertyType);
 
 	return TYPE_MAPPING[typeName] || typeName; // Default to the type name for interfaces
 }
@@ -52,6 +56,10 @@ function isSupportedType(propertyType: Type): boolean {
 	if (propertyType.isArray()) {
 		const arrayElementType = propertyType.getArrayElementType();
 		return arrayElementType ? isSupportedType(arrayElementType) : false;
+	}
+
+	if (propertyType.isInterface()) {
+		return true;
 	}
 
 	if (isRecordType(propertyType)) {
@@ -103,9 +111,13 @@ function getSwiftDefaultValue(propertyType: Type): string {
 		return "[]";
 	}
 
+	if (isRecordType(propertyType)) {
+		return "[:]";
+	}
+
 	// Handle non-array types
-	const typeText = propertyType.getText();
-	return DEFAULT_VALUE_MAPPING[typeText] || "[:]";
+	const typeText = getTypeName(propertyType);
+	return DEFAULT_VALUE_MAPPING[typeText] || `${typeText}()`;
 }
 
 /**
@@ -126,7 +138,7 @@ function generateSwiftRecord(interfaceDecl: InterfaceDeclaration): string {
 			const isOptional = property.hasQuestionToken();
 
 			if (!isSupportedType(propertyType)) {
-				const typeText = propertyType.getText();
+				const typeText = getTypeName(propertyType);
 				throw new Error(`Unsupported TypeScript type: ${typeText}`);
 			}
 
