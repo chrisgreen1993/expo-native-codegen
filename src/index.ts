@@ -29,6 +29,15 @@ function mapTypeScriptToSwiftType(propertyType: Type): string {
 		return elementType ? `[${mapTypeScriptToSwiftType(elementType)}]` : "[Any]";
 	}
 
+	if (isRecordType(propertyType)) {
+		const [keyType, valueType] = getRecordTypeArguments(propertyType);
+		if (keyType && valueType) {
+			const swiftKeyType = mapTypeScriptToSwiftType(keyType);
+			const swiftValueType = mapTypeScriptToSwiftType(valueType);
+			return `[${swiftKeyType}: ${swiftValueType}]`;
+		}
+	}
+
 	// Get the base type name
 	const typeName = propertyType.getText();
 
@@ -36,7 +45,7 @@ function mapTypeScriptToSwiftType(propertyType: Type): string {
 }
 
 /**
- * Check if a TypeScript type is supported
+ * Check if a TypeScript type is supported for conversion to Swift
  */
 function isSupportedType(propertyType: Type): boolean {
 	// Check if it's an array type
@@ -45,9 +54,25 @@ function isSupportedType(propertyType: Type): boolean {
 		return arrayElementType ? isSupportedType(arrayElementType) : false;
 	}
 
-	// Check if it's a non-array type
+	if (isRecordType(propertyType)) {
+		const [keyType, valueType] = getRecordTypeArguments(propertyType);
+		if (keyType && valueType) {
+			return isSupportedType(keyType) && isSupportedType(valueType);
+		}
+		return false;
+	}
+
 	const typeText = propertyType.getText();
 	return typeText in TYPE_MAPPING;
+}
+
+function isRecordType(type: Type): boolean {
+	return type.getAliasSymbol()?.getName() === "Record";
+}
+
+function getRecordTypeArguments(type: Type): [Type?, Type?] {
+	const aliasTypeArguments = type.getAliasTypeArguments();
+	return [aliasTypeArguments[0], aliasTypeArguments[1]];
 }
 
 /**

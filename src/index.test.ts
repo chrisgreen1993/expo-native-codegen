@@ -198,7 +198,7 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe.todo("Map/Object types", () => {
+	describe("Map/Object types", () => {
 		it("should handle Record<string, string>", () => {
 			const result = generateSwiftRecords(testData.stringMap);
 			expect(result).toMatchInlineSnapshot(`
