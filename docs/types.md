@@ -18,7 +18,6 @@ This document defines the mapping between TypeScript types and their correspondi
 | `Record<string, T>`  | `[String: T]`      | `Map<String, T>`          | Typed map with specific value type                            |
 | `enum` (string)      | `EnumType: String` | `EnumType : String`       | Use Swift/Kotlin enum types                                   |
 | `null` / `undefined` | `T?`               | `T?`                      | Use optional types                                            |
-| `Date` (ISO string)  | `String`           | `String`                  | Generally represented as ISO 8601 string                      |
 | `UInt8Array`         | `Data`             | `ByteArray`               | Binary data representation                                   |
 | Nested Record        | `RecordType`       | `RecordType`              | Must conform to Record protocol/interface                     |
 
@@ -37,7 +36,6 @@ This document defines the mapping between TypeScript types and their correspondi
 - **Maps**: Swift uses `[String: T]` syntax, Kotlin uses `Map<String, T>` syntax
 - **Enums**: Must conform to `Enumerable` interface in both Swift and Kotlin
 - **Nested Records**: Must conform to Record protocol/interface
-- **Date handling**: Typically converted to ISO 8601 strings for cross-platform compatibility
 
 ## Example Usage in Expo Records
 
@@ -72,10 +70,6 @@ export interface ExampleRecord {
   
   // Optional types
   description?: string;
-  lastLogin?: string; // ISO 8601 date string
-  
-  // Date as ISO string
-  createdAt: string; // ISO 8601 date string
   
   // Binary data
   imageData: UInt8Array;
@@ -149,13 +143,6 @@ public struct ExampleRecord: Record {
   // Optional types
   @Field
   var description: String? = nil
-  
-  @Field
-  var lastLogin: String? = nil // ISO 8601 date string
-  
-  // Date as ISO string
-  @Field
-  var createdAt: String = "" // ISO 8601 date string
   
   // Binary data
   @Field
@@ -236,13 +223,6 @@ class ExampleRecord : Record {
   // Optional types
   @Field
   val description: String? = null
-  
-  @Field
-  val lastLogin: String? = null // ISO 8601 date string
-  
-  // Date as ISO string
-  @Field
-  val createdAt: String = "" // ISO 8601 date string
   
   // Binary data
   @Field

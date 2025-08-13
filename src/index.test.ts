@@ -63,11 +63,6 @@ export interface EnumRecord {
   status: Status;
   priority?: Status;
 }`,
-		dateType: `
-export interface DateRecord {
-  createdAt: string; // ISO 8601 date string
-  lastLogin?: string; // Optional ISO 8601 date string
-}`,
 		nestedRecord: `
 export interface Address {
   street: string;
@@ -240,21 +235,6 @@ describe("Swift Record Generation", () => {
 
 			    @Field
 			    var priority: Status? = nil
-			  }"
-			`);
-		});
-	});
-
-	describe.todo("Date handling", () => {
-		it("should handle date as string", () => {
-			const result = generateSwiftRecords(testData.dateType);
-			expect(result).toMatchInlineSnapshot(`
-			  "public struct DateRecord: Record {
-			    @Field
-			    var createdAt: String = "" // ISO 8601 date string
-
-			    @Field
-			    var lastLogin: String? = nil // Optional ISO 8601 date string
 			  }"
 			`);
 		});
@@ -468,21 +448,6 @@ describe.todo("Kotlin Record Generation", () => {
 
 			    @Field
 			    val priority: Status? = null
-			  }"
-			`);
-		});
-	});
-
-	describe("Date handling", () => {
-		it("should handle date as string", () => {
-			const result = generateKotlinRecords(testData.dateType);
-			expect(result).toMatchInlineSnapshot(`
-			  "class DateRecord : Record {
-			    @Field
-			    val createdAt: String = "" // ISO 8601 date string
-
-			    @Field
-			    val lastLogin: String? = null // Optional ISO 8601 date string
 			  }"
 			`);
 		});
