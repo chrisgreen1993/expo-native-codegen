@@ -157,7 +157,7 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe.todo("Array types", () => {
+	describe("Array types", () => {
 		it("should handle string array", () => {
 			const result = generateSwiftRecords(testData.stringArray);
 			expect(result).toMatchInlineSnapshot(`
@@ -261,7 +261,7 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe.todo("Binary data handling", () => {
+	describe("Binary data handling", () => {
 		it("should handle UInt8Array", () => {
 			const result = generateSwiftRecords(testData.binaryDataRecord);
 			expect(result).toMatchInlineSnapshot(`

@@ -1,4 +1,4 @@
-import { type InterfaceDeclaration, Project } from "ts-morph";
+import { type InterfaceDeclaration, Project, type Type } from "ts-morph";
 
 /**
  * Parse TypeScript code and extract all interface declarations
@@ -20,10 +20,34 @@ function parseInterfaces(typescriptCode: string): InterfaceDeclaration[] {
 }
 
 /**
+ * Convert TypeScript type to Swift type recursively
+ */
+function mapTypeScriptToSwiftType(propertyType: Type): string {
+	// Handle array types recursively
+	if (propertyType.isArray()) {
+		const elementType = propertyType.getArrayElementType();
+		return elementType ? `[${mapTypeScriptToSwiftType(elementType)}]` : "[Any]";
+	}
+
+	// Get the base type name
+	const typeName = propertyType.getText();
+
+	return TYPE_MAPPING[typeName] || typeName; // Default to the type name for interfaces
+}
+
+/**
  * Check if a TypeScript type is supported
  */
-function isSupportedType(typeText: string): boolean {
-	return Object.keys(TYPE_MAPPING).includes(typeText);
+function isSupportedType(propertyType: Type): boolean {
+	// Check if it's an array type
+	if (propertyType.isArray()) {
+		const arrayElementType = propertyType.getArrayElementType();
+		return arrayElementType ? isSupportedType(arrayElementType) : false;
+	}
+
+	// Check if it's a non-array type
+	const typeText = propertyType.getText();
+	return typeText in TYPE_MAPPING;
 }
 
 /**
@@ -34,11 +58,8 @@ const TYPE_MAPPING: Record<string, string> = {
 	number: "Double",
 	boolean: "Bool",
 	any: "Any",
+	UInt8Array: "Data",
 };
-
-function mapTypeScriptToSwiftType(typeText: string): string {
-	return TYPE_MAPPING[typeText] || "Any"; // fallback
-}
 
 /**
  * Get default value for Swift type
@@ -48,10 +69,18 @@ const DEFAULT_VALUE_MAPPING: Record<string, string> = {
 	number: "0.0",
 	boolean: "false",
 	any: "[:]",
+	UInt8Array: "Data()",
 };
 
-function getSwiftDefaultValue(typeText: string): string {
-	return DEFAULT_VALUE_MAPPING[typeText] || "[:]"; // fallback
+function getSwiftDefaultValue(propertyType: Type): string {
+	// Check if it's an array type
+	if (propertyType.isArray()) {
+		return "[]";
+	}
+
+	// Handle non-array types
+	const typeText = propertyType.getText();
+	return DEFAULT_VALUE_MAPPING[typeText] || "[:]";
 }
 
 /**
@@ -71,15 +100,13 @@ function generateSwiftRecord(interfaceDecl: InterfaceDeclaration): string {
 			const propertyType = property.getType();
 			const isOptional = property.hasQuestionToken();
 
-			// Get the type as text and map it to Swift types
-			const typeText = propertyType.getText();
-
-			if (!isSupportedType(typeText)) {
+			if (!isSupportedType(propertyType)) {
+				const typeText = propertyType.getText();
 				throw new Error(`Unsupported TypeScript type: ${typeText}`);
 			}
 
-			const swiftType = mapTypeScriptToSwiftType(typeText);
-			let defaultValue = getSwiftDefaultValue(typeText);
+			const swiftType = mapTypeScriptToSwiftType(propertyType);
+			let defaultValue = getSwiftDefaultValue(propertyType);
 
 			// Handle optional types
 			if (isOptional) {
