@@ -16,7 +16,8 @@ This document defines the mapping between TypeScript types and their correspondi
 | `T[]` (nested records) | `[RecordType]`     | `List<RecordType>`        | Array of nested record types                                  |
 | `object` (dictionary) | `[String: Any]`    | `Map<String, Any>`        | Only serializable types supported                             |
 | `Record<string, T>`  | `[String: T]`      | `Map<String, T>`          | Typed map with specific value type                            |
-| `enum` (string)      | `EnumType: String` | `EnumType : String`       | Use Swift/Kotlin enum types                                   |
+| `enum` (string)      | `EnumType: String` | `EnumType : String`       | String-literal members only                                   |
+| `enum` (number)      | `EnumType: Int`    | `EnumType : Int`          | Numeric members only; auto-increment supported                |
 | `null` / `undefined` | `T?`               | `T?`                      | Use optional types                                            |
 | `UInt8Array`         | `Data`             | `ByteArray`               | Binary data representation                                   |
 | Nested Record        | `RecordType`       | `RecordType`              | Must conform to Record protocol/interface                     |
@@ -35,6 +36,7 @@ This document defines the mapping between TypeScript types and their correspondi
 - **Arrays**: Swift uses `[T]` syntax, Kotlin uses `List<T>` syntax
 - **Maps**: Swift uses `[String: T]` syntax, Kotlin uses `Map<String, T>` syntax
 - **Enums**: Must conform to `Enumerable` interface in both Swift and Kotlin
+- **Enums (supported kinds)**: Pure string enums (all members use string literal initializers) and pure numeric enums (all members numeric). Heterogeneous enums (mixing string and numeric members) are not supported and will throw an error during generation.
 - **Nested Records**: Must conform to Record protocol/interface
 
 ## Example Usage in Expo Records

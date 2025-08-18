@@ -1,15 +1,24 @@
-import { type InterfaceDeclaration, Project, type Type } from "ts-morph";
+import {
+	type EnumDeclaration,
+	type InterfaceDeclaration,
+	Node,
+	Project,
+	type Type,
+} from "ts-morph";
 
 function getTypeName(type: Type): string {
 	return type.getSymbol()?.getName() || type.getText();
 }
 
 /**
- * Parse TypeScript code and extract all interface declarations
+ * Parse TypeScript code once and extract all interface and enum declarations
  */
-function parseInterfaces(typescriptCode: string): InterfaceDeclaration[] {
+function parseTypeScriptDeclarations(typescriptCode: string): {
+	interfaces: InterfaceDeclaration[];
+	enums: EnumDeclaration[];
+} {
 	if (!typescriptCode.trim()) {
-		return [];
+		return { interfaces: [], enums: [] };
 	}
 
 	const project = new Project({
@@ -17,10 +26,10 @@ function parseInterfaces(typescriptCode: string): InterfaceDeclaration[] {
 	});
 	const sourceFile = project.createSourceFile("input.ts", typescriptCode);
 
-	// Find all interface declarations
-	const interfaces = sourceFile.getInterfaces();
-
-	return interfaces;
+	return {
+		interfaces: sourceFile.getInterfaces(),
+		enums: sourceFile.getEnums(),
+	};
 }
 
 /**
@@ -58,7 +67,7 @@ function isSupportedType(propertyType: Type): boolean {
 		return arrayElementType ? isSupportedType(arrayElementType) : false;
 	}
 
-	if (propertyType.isInterface()) {
+	if (propertyType.isInterface() || propertyType.isEnum()) {
 		return true;
 	}
 
@@ -115,9 +124,48 @@ function getSwiftDefaultValue(propertyType: Type): string {
 		return "[:]";
 	}
 
+	// Enums default to first case, e.g. .pending (detect via symbol declarations)
+	const symbol = propertyType.getSymbol();
+	const enumDecl = symbol?.getDeclarations().find(Node.isEnumDeclaration);
+	const firstMemberName = enumDecl?.getMembers()[0]?.getName();
+	if (firstMemberName) {
+		return `.${firstMemberName}`;
+	}
+
 	// Handle non-array types
 	const typeText = getTypeName(propertyType);
 	return DEFAULT_VALUE_MAPPING[typeText] || `${typeText}()`;
+}
+
+/**
+ * Generate Swift enum code for a single enum declaration
+ * TODO: Error handling for heterogeneous enums (mix string and numeric)
+ */
+function generateSwiftEnum(enumDecl: EnumDeclaration): string {
+	const enumName = enumDecl.getName();
+	const members = enumDecl.getMembers();
+
+	const hasStringInitializer = members.some((m) =>
+		Node.isStringLiteral(m.getInitializer()),
+	);
+
+	const swiftType = hasStringInitializer ? "String" : "Int";
+
+	const cases = members
+		.map((member) => {
+			const name = member.getName();
+			if (swiftType === "Int") {
+				const value = member.getValue();
+				return `  case ${name} = ${String(value)}`;
+			}
+
+			// String enums must have string literal initializers in TypeScript
+			const initializer = member.getInitializerOrThrow();
+			return `  case ${name} = ${initializer.getText()}`;
+		})
+		.join("\n");
+
+	return `enum ${enumName}: ${swiftType}, Enumerable {\n${cases}\n}`;
 }
 
 /**
@@ -163,20 +211,16 @@ ${propertyFields}
 }
 
 export function generateSwiftRecords(typescriptCode: string): string {
-	const interfaces = parseInterfaces(typescriptCode);
+	const { interfaces, enums } = parseTypeScriptDeclarations(typescriptCode);
 
-	if (interfaces.length === 0) {
-		return "";
-	}
-
-	// Generate Swift Records for each interface
+	const swiftEnums = enums.map(generateSwiftEnum).join("\n\n");
 	const swiftRecords = interfaces.map(generateSwiftRecord).join("\n\n");
 
-	return swiftRecords;
+	return [swiftEnums, swiftRecords].filter(Boolean).join("\n\n");
 }
 
 export function generateKotlinRecords(typescriptCode: string): string {
-	const interfaces = parseInterfaces(typescriptCode);
+	const { interfaces } = parseTypeScriptDeclarations(typescriptCode);
 
 	if (interfaces.length === 0) {
 		return "";

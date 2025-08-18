@@ -55,8 +55,23 @@ export interface AnyMapRecord {
 }`,
 		enumType: `
 export enum Status {
-  PENDING = "pending",
-  ACTIVE = "active"
+  pending = "pending",
+  active = "active"
+}`,
+		numericEnumType: `
+export enum Direction {
+  UP,
+  DOWN
+}
+
+export enum Status {
+  pending = 1,
+  active = 2
+}`,
+		nestedEnum: `
+export enum Status {
+  pending = "pending",
+  active = "active"
 }
 
 export interface EnumRecord {
@@ -220,9 +235,34 @@ describe("Swift Record Generation", () => {
 		});
 	});
 
-	describe.todo("Enum types", () => {
+	describe("Enum types", () => {
 		it("should handle string enum", () => {
 			const result = generateSwiftRecords(testData.enumType);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum Status: String, Enumerable {
+			    case pending = "pending"
+			    case active = "active"
+			  }"
+			`);
+		});
+
+		it("should handle numeric enum", () => {
+			const result = generateSwiftRecords(testData.numericEnumType);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum Direction: Int, Enumerable {
+			    case UP = 0
+			    case DOWN = 1
+			  }
+
+			  enum Status: Int, Enumerable {
+			    case pending = 1
+			    case active = 2
+			  }"
+			`);
+		});
+
+		it("should handle string enum within record", () => {
+			const result = generateSwiftRecords(testData.nestedEnum);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Status: String, Enumerable {
 			    case pending = "pending"
