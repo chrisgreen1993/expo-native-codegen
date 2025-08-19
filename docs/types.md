@@ -18,7 +18,9 @@ This document defines the mapping between TypeScript types and their correspondi
 | `Record<string, T>`  | `[String: T]`      | `Map<String, T>`          | Typed map with specific value type                            |
 | `enum` (string)      | `EnumType: String` | `EnumType : String`       | String-literal members only                                   |
 | `enum` (number)      | `EnumType: Int`    | `EnumType : Int`          | Numeric members only; auto-increment supported                |
-| `null` / `undefined` | `T?`               | `T?`                      | Use optional types                                            |
+| `"a" \| "b"` (string literal union) | `SynthesizedEnum: String` | `SynthesizedEnum : String` | Inline string unions synthesize new enum types |
+| `1 \| 2 \| 3` (numeric literal union) | `SynthesizedEnum: Int` | `SynthesizedEnum : Int` | Inline numeric unions synthesize new enum types |
+| `T \| null \| undefined` | `T?`               | `T?`                      | Null/undefined unions become optional types                   |
 | `UInt8Array`         | `Data`             | `ByteArray`               | Binary data representation                                   |
 | Nested Record        | `RecordType`       | `RecordType`              | Must conform to Record protocol/interface                     |
 
@@ -37,6 +39,11 @@ This document defines the mapping between TypeScript types and their correspondi
 - **Maps**: Swift uses `[String: T]` syntax, Kotlin uses `Map<String, T>` syntax
 - **Enums**: Must conform to `Enumerable` interface in both Swift and Kotlin
 - **Enums (supported kinds)**: Pure string enums (all members use string literal initializers) and pure numeric enums (all members numeric). Heterogeneous enums (mixing string and numeric members) are not supported and will throw an error during generation.
+- **Union Types**: 
+  - **String literal unions** (e.g., `"pending" | "active"`) synthesize new enum types with content-based naming (e.g., `Pending_Active_Union`)
+  - **Numeric literal unions** (e.g., `1 | 2 | 3`) synthesize new enum types with underscore case names (e.g., `1_2_3_NumericUnion` with cases `_1`, `_2`, `_3`)
+  - **Null/undefined unions** (e.g., `string | null`) become optional types (`String?`)
+  - **Type aliases** for unions use the alias name directly (e.g., `type Status = "pending" | "active"` generates enum `Status`)
 - **Nested Records**: Must conform to Record protocol/interface
 
 ## Example Usage in Expo Records
@@ -69,6 +76,11 @@ export interface ExampleRecord {
   
   // Enum type
   status: Status;
+  
+  // Union types
+  priority: "low" | "medium" | "high";
+  level: 1 | 2 | 3;
+  description: string | null;
   
   // Optional types
   description?: string;
@@ -142,6 +154,16 @@ public struct ExampleRecord: Record {
   @Field
   var status: Status = .pending
   
+  // Union types
+  @Field
+  var priority: Low_Medium_High_Union = .low
+  
+  @Field
+  var level: 1_2_3_NumericUnion = ._1
+  
+  @Field
+  var description: String? = nil
+  
   // Optional types
   @Field
   var description: String? = nil
@@ -160,6 +182,19 @@ enum Status: String, Enumerable {
   case pending = "pending"
   case active = "active"
   case inactive = "inactive"
+}
+
+// Synthesized enums from literal unions
+enum Low_Medium_High_Union: String, Enumerable {
+  case low = "low"
+  case medium = "medium"
+  case high = "high"
+}
+
+enum 1_2_3_NumericUnion: Int, Enumerable {
+  case _1 = 1
+  case _2 = 2
+  case _3 = 3
 }
 
 // Nested Record must conform to Record protocol
@@ -222,6 +257,16 @@ class ExampleRecord : Record {
   @Field
   val status: Status = Status.PENDING
   
+  // Union types
+  @Field
+  val priority: Low_Medium_High_Union = Low_Medium_High_Union.LOW
+  
+  @Field
+  val level: 1_2_3_NumericUnion = 1_2_3_NumericUnion._1
+  
+  @Field
+  val description: String? = null
+  
   // Optional types
   @Field
   val description: String? = null
@@ -240,6 +285,19 @@ enum class Status(val value: String) : Enumerable {
   PENDING("pending"),
   ACTIVE("active"),
   INACTIVE("inactive")
+}
+
+// Synthesized enums from literal unions
+enum class Low_Medium_High_Union(val value: String) : Enumerable {
+  LOW("low"),
+  MEDIUM("medium"),
+  HIGH("high")
+}
+
+enum class 1_2_3_NumericUnion(val value: Int) : Enumerable {
+  _1(1),
+  _2(2),
+  _3(3)
 }
 
 // Nested Record must conform to Record interface

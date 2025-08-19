@@ -53,6 +53,29 @@ export interface AnyMapRecord {
   config: Record<string, any>;
   optionalConfig?: Record<string, any>;
 }`,
+		literalStringUnion: `
+export interface InlineUnionRecord {
+  status: "pending" | "active";
+  optionalStatus?: "pending" | "active";
+}`,
+
+		numericLiteralUnion: `
+export interface PriorityRecord {
+  level: 1 | 2 | 3;
+  optionalLevel?: 1 | 2 | 3;
+}`,
+		optionalUnion: `
+export interface OptionalUnionRecord {
+  description: string | undefined;
+  maybeCount: number | null;
+}`,
+		unionAliasString: `
+export type Status = "pending" | "active";
+
+export interface AliasUnionRecord {
+  status: Status;
+  optionalStatus?: Status;
+}`,
 		enumType: `
 export enum Status {
   pending = "pending",
@@ -275,6 +298,76 @@ describe("Swift Record Generation", () => {
 
 			    @Field
 			    var priority: Status? = nil
+			  }"
+			`);
+		});
+	});
+
+	describe.todo("Union types", () => {
+		it("should synthesize enum from string literal union and handle optional", () => {
+			const result = generateSwiftRecords(testData.literalStringUnion);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum Pending_Active_Union: String, Enumerable {
+			    case pending = \"pending\"
+			    case active = \"active\"
+			  }
+
+			  public struct InlineUnionRecord: Record {
+			    @Field
+			    var status: Pending_Active_Union = .pending
+
+			    @Field
+			    var optionalStatus: Pending_Active_Union? = nil
+			  }"
+			`);
+		});
+
+		it("should treat null/undefined unions as optional of base type", () => {
+			const result = generateSwiftRecords(testData.optionalUnion);
+			expect(result).toMatchInlineSnapshot(`
+			  "public struct OptionalUnionRecord: Record {
+			    @Field
+			    var description: String? = nil
+
+			    @Field
+			    var maybeCount: Double? = nil
+			  }"
+			`);
+		});
+
+		it("should synthesize enum from union alias", () => {
+			const result = generateSwiftRecords(testData.unionAliasString);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum Status: String, Enumerable {
+			    case pending = \"pending\"
+			    case active = \"active\"
+			  }
+
+			  public struct AliasUnionRecord: Record {
+			    @Field
+			    var status: Status = .pending
+
+			    @Field
+			    var optionalStatus: Status? = nil
+			  }"
+			`);
+		});
+
+		it("should handle numeric literal unions with content-based naming", () => {
+			const result = generateSwiftRecords(testData.numericLiteralUnion);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum 1_2_3_NumericUnion: Int, Enumerable {
+			    case _1 = 1
+			    case _2 = 2
+			    case _3 = 3
+			  }
+
+			  public struct PriorityRecord: Record {
+			    @Field
+			    var level: 1_2_3_NumericUnion = ._1
+
+			    @Field
+			    var optionalLevel: 1_2_3_NumericUnion? = nil
 			  }"
 			`);
 		});
