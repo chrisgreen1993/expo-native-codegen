@@ -21,7 +21,7 @@ This document defines the mapping between TypeScript types and their correspondi
 | `"a" \| "b"` (string literal union) | `SynthesizedEnum: String` | `SynthesizedEnum : String` | Inline string unions synthesize new enum types |
 | `1 \| 2 \| 3` (numeric literal union) | `SynthesizedEnum: Int` | `SynthesizedEnum : Int` | Inline numeric unions synthesize new enum types |
 | `T \| null \| undefined` | `T?`               | `T?`                      | Null/undefined unions become optional types                   |
-| `UInt8Array`         | `Data`             | `ByteArray`               | Binary data representation                                   |
+| `Uint8Array`         | `Data`             | `ByteArray`               | Binary data representation                                   |
 | Nested Record        | `RecordType`       | `RecordType`              | Must conform to Record protocol/interface                     |
 
 ## Type Modifiers
@@ -86,7 +86,7 @@ export interface ExampleRecord {
   description?: string;
   
   // Binary data
-  imageData: UInt8Array;
+  imageData: Uint8Array;
   
   // Nested Record
   address: Address;

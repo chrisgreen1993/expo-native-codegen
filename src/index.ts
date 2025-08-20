@@ -79,7 +79,7 @@ function isSupportedType(propertyType: Type): boolean {
 		return false;
 	}
 
-	const typeText = propertyType.getText();
+	const typeText = getTypeName(propertyType);
 	return typeText in TYPE_MAPPING;
 }
 
@@ -100,7 +100,7 @@ const TYPE_MAPPING: Record<string, string> = {
 	number: "Double",
 	boolean: "Bool",
 	any: "Any",
-	UInt8Array: "Data",
+	Uint8Array: "Data",
 };
 
 /**
@@ -111,7 +111,7 @@ const DEFAULT_VALUE_MAPPING: Record<string, string> = {
 	number: "0.0",
 	boolean: "false",
 	any: "[:]",
-	UInt8Array: "Data()",
+	Uint8Array: "Data()",
 };
 
 function getSwiftDefaultValue(propertyType: Type): string {

@@ -123,8 +123,8 @@ export interface NestedArrayRecord {
 }`,
 		binaryDataRecord: `
 export interface BinaryDataRecord {
-  data: UInt8Array;
-  optionalData?: UInt8Array;
+  data: Uint8Array;
+  optionalData?: Uint8Array;
 }`,
 		emptyRecord: `
 export interface EmptyRecord {
@@ -374,7 +374,7 @@ describe("Swift Record Generation", () => {
 	});
 
 	describe("Binary data handling", () => {
-		it("should handle UInt8Array", () => {
+		it("should handle Uint8Array", () => {
 			const result = generateSwiftRecords(testData.binaryDataRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct BinaryDataRecord: Record {
@@ -587,7 +587,7 @@ describe.todo("Kotlin Record Generation", () => {
 	});
 
 	describe("Binary data handling", () => {
-		it("should handle UInt8Array", () => {
+		it("should handle Uint8Array", () => {
 			const result = generateKotlinRecords(testData.binaryDataRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "class BinaryDataRecord : Record {
