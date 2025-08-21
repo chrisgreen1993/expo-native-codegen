@@ -32,10 +32,30 @@ function parseTypeScriptDeclarations(typescriptCode: string): {
 	};
 }
 
+function isUint8Array(propertyType: Type): boolean {
+	return getTypeName(propertyType) === "Uint8Array";
+}
 /**
  * Convert TypeScript type to Swift type recursively
  */
 function mapTypeScriptToSwiftType(propertyType: Type): string {
+	if (propertyType.isString()) {
+		return "String";
+	}
+	if (propertyType.isNumber()) {
+		return "Double";
+	}
+	if (propertyType.isBoolean()) {
+		return "Bool";
+	}
+	// Check if it's actually the 'any' type, not just any type
+	if (propertyType.isAny() && getTypeName(propertyType) === "any") {
+		return "Any";
+	}
+	if (isUint8Array(propertyType)) {
+		return "Data";
+	}
+
 	// Handle array types recursively
 	if (propertyType.isArray()) {
 		const elementType = propertyType.getArrayElementType();
@@ -51,36 +71,15 @@ function mapTypeScriptToSwiftType(propertyType: Type): string {
 		}
 	}
 
-	// Get the base type name
-	const typeName = getTypeName(propertyType);
-
-	return TYPE_MAPPING[typeName] || typeName; // Default to the type name for interfaces
-}
-
-/**
- * Check if a TypeScript type is supported for conversion to Swift
- */
-function isSupportedType(propertyType: Type): boolean {
-	// Check if it's an array type
-	if (propertyType.isArray()) {
-		const arrayElementType = propertyType.getArrayElementType();
-		return arrayElementType ? isSupportedType(arrayElementType) : false;
+	if (propertyType.isInterface()) {
+		return getTypeName(propertyType);
 	}
 
-	if (propertyType.isInterface() || propertyType.isEnum()) {
-		return true;
+	if (propertyType.isEnum()) {
+		return getTypeName(propertyType);
 	}
 
-	if (isRecordType(propertyType)) {
-		const [keyType, valueType] = getRecordTypeArguments(propertyType);
-		if (keyType && valueType) {
-			return isSupportedType(keyType) && isSupportedType(valueType);
-		}
-		return false;
-	}
-
-	const typeText = getTypeName(propertyType);
-	return typeText in TYPE_MAPPING;
+	throw new Error(`Unsupported TypeScript type: ${getTypeName(propertyType)}`);
 }
 
 function isRecordType(type: Type): boolean {
@@ -91,17 +90,6 @@ function getRecordTypeArguments(type: Type): [Type?, Type?] {
 	const aliasTypeArguments = type.getAliasTypeArguments();
 	return [aliasTypeArguments[0], aliasTypeArguments[1]];
 }
-
-/**
- * Map TypeScript type to Swift type
- */
-const TYPE_MAPPING: Record<string, string> = {
-	string: "String",
-	number: "Double",
-	boolean: "Bool",
-	any: "Any",
-	Uint8Array: "Data",
-};
 
 /**
  * Get default value for Swift type
@@ -184,11 +172,6 @@ function generateSwiftRecord(interfaceDecl: InterfaceDeclaration): string {
 			const propertyName = property.getName();
 			const propertyType = property.getType();
 			const isOptional = property.hasQuestionToken();
-
-			if (!isSupportedType(propertyType)) {
-				const typeText = getTypeName(propertyType);
-				throw new Error(`Unsupported TypeScript type: ${typeText}`);
-			}
 
 			const swiftType = mapTypeScriptToSwiftType(propertyType);
 			let defaultValue = getSwiftDefaultValue(propertyType);
