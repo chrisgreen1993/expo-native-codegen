@@ -4,6 +4,7 @@ import {
 	Node,
 	Project,
 	type Type,
+	type TypeAliasDeclaration,
 } from "ts-morph";
 
 function getTypeName(type: Type): string {
@@ -16,9 +17,10 @@ function getTypeName(type: Type): string {
 function parseTypeScriptDeclarations(typescriptCode: string): {
 	interfaces: InterfaceDeclaration[];
 	enums: EnumDeclaration[];
+	unionAliases: TypeAliasDeclaration[];
 } {
 	if (!typescriptCode.trim()) {
-		return { interfaces: [], enums: [] };
+		return { interfaces: [], enums: [], unionAliases: [] };
 	}
 
 	const project = new Project({
@@ -32,22 +34,55 @@ function parseTypeScriptDeclarations(typescriptCode: string): {
 	return {
 		interfaces: sourceFile.getInterfaces(),
 		enums: sourceFile.getEnums(),
+		unionAliases: sourceFile.getTypeAliases().filter((alias) => {
+			const aliasType = alias.getType();
+			if (!aliasType.isUnion()) return false;
+			const unionTypes = aliasType.getUnionTypes();
+			const literalMembers = unionTypes.filter(
+				(t) => t.isStringLiteral() || t.isNumberLiteral(),
+			);
+			// Must be a union of only string/number literals (excluding null/undefined)
+			const nonNullish = unionTypes.filter(
+				(t) => !t.isUndefined() && !t.isNull(),
+			);
+			return (
+				nonNullish.length > 0 && nonNullish.length === literalMembers.length
+			);
+		}),
 	};
 }
 
 function isUint8Array(propertyType: Type): boolean {
 	return getTypeName(propertyType) === "Uint8Array";
 }
+
+function isOptionalUnion(propertyType: Type): boolean {
+	return (
+		propertyType.isUnion() &&
+		propertyType
+			.getUnionTypes()
+			.some((type) => type.isUndefined() || type.isNull())
+	);
+}
 /**
  * Convert TypeScript type to Swift type recursively
  */
 function mapTypeScriptToSwiftType(propertyType: Type): string {
-	// optional properties are expanded to a union type of the property type and undefined
 	if (propertyType.isUnion()) {
 		const unionTypes = propertyType.getUnionTypes();
+		// optional properties are expanded to a union type of the property type and undefined
+		const nonNullishTypes = unionTypes.filter(
+			(type) => !type.isUndefined() && !type.isNull(),
+		);
 
-		const nonUndefinedTypes = unionTypes.filter((type) => !type.isUndefined());
-		const swiftTypes = nonUndefinedTypes.map((type) =>
+		// If this union comes from a named alias (e.g., type Status = "a" | "b"),
+		const nonNullableType = propertyType.getNonNullableType();
+		const aliasName = nonNullableType.getAliasSymbol()?.getName();
+		if (aliasName && nonNullableType.isUnion()) {
+			return aliasName;
+		}
+
+		const swiftTypes = nonNullishTypes.map((type) =>
 			mapTypeScriptToSwiftType(type),
 		);
 		// Deduplicate the resulting types (e.g true | false -> Bool)
@@ -144,6 +179,24 @@ function getSwiftDefaultValue(propertyType: Type): string {
 		return `.${firstMemberName}`;
 	}
 
+	// If this is a union alias like type Status = "a" | "b",
+	// choose the first literal as the default case.
+	if (propertyType.isUnion() && propertyType.getNonNullableType().isUnion()) {
+		const unionTypes = propertyType
+			.getUnionTypes()
+			.filter((t) => !t.isUndefined() && !t.isNull());
+		const first = unionTypes[0];
+		if (first?.isStringLiteral()) {
+			const literal = String(first.getLiteralValue());
+			return `.${literal}`;
+		}
+		if (first?.isNumberLiteral()) {
+			const value = String(first.getLiteralValue());
+			// Numeric case names in Swift enums are prefixed with underscore
+			return `._${value}`;
+		}
+	}
+
 	// Handle non-array types
 	const typeText = getTypeName(propertyType);
 	return DEFAULT_VALUE_MAPPING[typeText] || `${typeText}()`;
@@ -180,6 +233,36 @@ function generateSwiftEnum(enumDecl: EnumDeclaration): string {
 	return `enum ${enumName}: ${swiftType}, Enumerable {\n${cases}\n}`;
 }
 
+// Generate Swift enum from an alias that is a union of string/number literals
+function generateSwiftEnumFromUnionAlias(alias: TypeAliasDeclaration): string {
+	const name = alias.getName();
+	const aliasType = alias.getType();
+	const unionTypes = aliasType
+		.getUnionTypes()
+		.filter((t) => !t.isUndefined() && !t.isNull());
+
+	const hasStringInitializer = unionTypes.every((t) => t.isStringLiteral());
+
+	const swiftType = hasStringInitializer ? "String" : "Int";
+
+	const cases = unionTypes
+		.map((t) => {
+			if (t.isStringLiteral()) {
+				const value = String(t.getLiteralValue());
+				return `  case ${value} = "${value}"`;
+			}
+			if (t.isNumberLiteral()) {
+				const num = String(t.getLiteralValue());
+				return `  case _${num} = ${num}`;
+			}
+			return "";
+		})
+		.filter(Boolean)
+		.join("\n");
+
+	return `enum ${name}: ${swiftType}, Enumerable {\n${cases}\n}`;
+}
+
 /**
  * Generate Swift Record code for a single interface
  */
@@ -195,7 +278,9 @@ function generateSwiftRecord(interfaceDecl: InterfaceDeclaration): string {
 		.map((property) => {
 			const propertyName = property.getName();
 			const propertyType = property.getType();
-			const isOptional = property.hasQuestionToken();
+			// Check if property is optional (either has question token or is union with undefined)
+			const isOptional =
+				property.hasQuestionToken() || isOptionalUnion(propertyType);
 
 			const swiftType = mapTypeScriptToSwiftType(propertyType);
 			let defaultValue = getSwiftDefaultValue(propertyType);
@@ -218,12 +303,18 @@ ${propertyFields}
 }
 
 export function generateSwiftRecords(typescriptCode: string): string {
-	const { interfaces, enums } = parseTypeScriptDeclarations(typescriptCode);
+	const { interfaces, enums, unionAliases } =
+		parseTypeScriptDeclarations(typescriptCode);
 
 	const swiftEnums = enums.map(generateSwiftEnum).join("\n\n");
+	const swiftAliasEnums = unionAliases
+		.map((alias) => generateSwiftEnumFromUnionAlias(alias))
+		.join("\n\n");
 	const swiftRecords = interfaces.map(generateSwiftRecord).join("\n\n");
 
-	return [swiftEnums, swiftRecords].filter(Boolean).join("\n\n");
+	return [swiftEnums, swiftAliasEnums, swiftRecords]
+		.filter((s) => Boolean(s))
+		.join("\n\n");
 }
 
 export function generateKotlinRecords(typescriptCode: string): string {
