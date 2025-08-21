@@ -23,6 +23,9 @@ function parseTypeScriptDeclarations(typescriptCode: string): {
 
 	const project = new Project({
 		useInMemoryFileSystem: true,
+		compilerOptions: {
+			strictNullChecks: true,
+		},
 	});
 	const sourceFile = project.createSourceFile("input.ts", typescriptCode);
 
@@ -39,13 +42,34 @@ function isUint8Array(propertyType: Type): boolean {
  * Convert TypeScript type to Swift type recursively
  */
 function mapTypeScriptToSwiftType(propertyType: Type): string {
+	// optional properties are expanded to a union type of the property type and undefined
+	if (propertyType.isUnion()) {
+		const unionTypes = propertyType.getUnionTypes();
+
+		const nonUndefinedTypes = unionTypes.filter((type) => !type.isUndefined());
+		const swiftTypes = nonUndefinedTypes.map((type) =>
+			mapTypeScriptToSwiftType(type),
+		);
+		// Deduplicate the resulting types (e.g true | false -> Bool)
+		const [swiftType] = [...new Set(swiftTypes)];
+		if (swiftType) {
+			return swiftType;
+		}
+		throw new Error(`Unsupported union type: ${getTypeName(propertyType)}`);
+	}
+
+	// get the base type of an enum literal (e.g pending -> Status)
+	if (propertyType.isEnumLiteral()) {
+		return getTypeName(propertyType.getBaseTypeOfLiteralType());
+	}
+
 	if (propertyType.isString()) {
 		return "String";
 	}
 	if (propertyType.isNumber()) {
 		return "Double";
 	}
-	if (propertyType.isBoolean()) {
+	if (propertyType.isBoolean() || propertyType.isBooleanLiteral()) {
 		return "Bool";
 	}
 	// Check if it's actually the 'any' type, not just any type
