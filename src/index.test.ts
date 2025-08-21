@@ -91,7 +91,7 @@ export enum Status {
   pending = 1,
   active = 2
 }`,
-		nestedEnum: `
+		nestedStringEnum: `
 export enum Status {
   pending = "pending",
   active = "active"
@@ -101,6 +101,17 @@ export interface EnumRecord {
   status: Status;
   priority?: Status;
 }`,
+		nestedNumericEnum: `
+export enum Direction {
+  UP,
+  DOWN
+}
+
+export interface EnumRecord {
+  direction: Direction;
+  optionalDirection?: Direction;
+}
+`,
 		nestedRecord: `
 export interface Address {
   street: string;
@@ -285,7 +296,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle string enum within record", () => {
-			const result = generateSwiftRecords(testData.nestedEnum);
+			const result = generateSwiftRecords(testData.nestedStringEnum);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Status: String, Enumerable {
 			    case pending = "pending"
@@ -298,6 +309,24 @@ describe("Swift Record Generation", () => {
 
 			    @Field
 			    var priority: Status? = nil
+			  }"
+			`);
+		});
+
+		it("should handle numeric enum within record", () => {
+			const result = generateSwiftRecords(testData.nestedNumericEnum);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum Direction: Int, Enumerable {
+			    case UP = 0
+			    case DOWN = 1
+			  }
+
+			  public struct EnumRecord: Record {
+			    @Field
+			    var direction: Direction = .UP
+
+			    @Field
+			    var optionalDirection: Direction? = nil
 			  }"
 			`);
 		});
