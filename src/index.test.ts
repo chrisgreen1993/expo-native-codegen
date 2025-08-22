@@ -100,8 +100,8 @@ export enum Status {
 }`,
 		nestedStringEnum: `
 export enum Status {
-  pending = "pending",
-  active = "active"
+  pending = "PENDING",
+  active = "ACTIVE"
 }
 
 export interface EnumRecord {
@@ -306,8 +306,8 @@ describe("Swift Record Generation", () => {
 			const result = generateSwiftRecords(testData.nestedStringEnum);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Status: String, Enumerable {
-			    case pending = "pending"
-			    case active = "active"
+			    case pending = "PENDING"
+			    case active = "ACTIVE"
 			  }
 
 			  public struct EnumRecord: Record {

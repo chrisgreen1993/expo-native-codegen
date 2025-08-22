@@ -7,6 +7,11 @@ import {
 	type TypeAliasDeclaration,
 } from "ts-morph";
 
+interface SwiftType {
+	type: string;
+	defaultValue: string;
+}
+
 function getTypeName(type: Type): string {
 	return type.getSymbol()?.getName() || type.getText();
 }
@@ -64,61 +69,50 @@ function isOptionalUnion(propertyType: Type): boolean {
 			.some((type) => type.isUndefined() || type.isNull())
 	);
 }
+
+// Deduplicate types by the swift type name.
+function dedupeTypes(types: SwiftType[]): SwiftType[] {
+	const uniqueTypes = types.reduce(
+		(acc, swiftType) => {
+			acc[swiftType.type] = swiftType;
+			return acc;
+		},
+		{} as Record<string, SwiftType>,
+	);
+	return Object.values(uniqueTypes);
+}
+
 /**
  * Convert TypeScript type to Swift type recursively
  */
-function mapTypeScriptToSwiftType(propertyType: Type): string {
-	if (propertyType.isUnion()) {
-		const unionTypes = propertyType.getUnionTypes();
-		// optional properties are expanded to a union type of the property type and undefined
-		const nonNullishTypes = unionTypes.filter(
-			(type) => !type.isUndefined() && !type.isNull(),
-		);
-
-		// If this union comes from a named alias (e.g., type Status = "a" | "b"),
-		const nonNullableType = propertyType.getNonNullableType();
-		const aliasName = nonNullableType.getAliasSymbol()?.getName();
-		if (aliasName && nonNullableType.isUnion()) {
-			return aliasName;
-		}
-
-		const swiftTypes = nonNullishTypes.map((type) =>
-			mapTypeScriptToSwiftType(type),
-		);
-		// Deduplicate the resulting types (e.g true | false -> Bool)
-		const [swiftType] = [...new Set(swiftTypes)];
-		if (swiftType) {
-			return swiftType;
-		}
-		throw new Error(`Unsupported union type: ${getTypeName(propertyType)}`);
-	}
-
-	// get the base type of an enum literal (e.g pending -> Status)
-	if (propertyType.isEnumLiteral()) {
-		return getTypeName(propertyType.getBaseTypeOfLiteralType());
-	}
-
+function mapTypeScriptToSwiftType(propertyType: Type): SwiftType {
 	if (propertyType.isString()) {
-		return "String";
+		return { type: "String", defaultValue: '""' };
 	}
 	if (propertyType.isNumber()) {
-		return "Double";
+		return { type: "Double", defaultValue: "0.0" };
 	}
 	if (propertyType.isBoolean() || propertyType.isBooleanLiteral()) {
-		return "Bool";
+		return { type: "Bool", defaultValue: "false" };
 	}
 	// Check if it's actually the 'any' type, not just any type
 	if (propertyType.isAny() && getTypeName(propertyType) === "any") {
-		return "Any";
+		return { type: "Any", defaultValue: "[:]" };
 	}
 	if (isUint8Array(propertyType)) {
-		return "Data";
+		return { type: "Data", defaultValue: "Data()" };
 	}
 
 	// Handle array types recursively
 	if (propertyType.isArray()) {
 		const elementType = propertyType.getArrayElementType();
-		return elementType ? `[${mapTypeScriptToSwiftType(elementType)}]` : "[Any]";
+		if (!elementType) {
+			throw new Error(`Array ${getTypeName(propertyType)} has no element type`);
+		}
+		return {
+			type: `[${mapTypeScriptToSwiftType(elementType).type}]`,
+			defaultValue: "[]",
+		};
 	}
 
 	if (isRecordType(propertyType)) {
@@ -126,16 +120,61 @@ function mapTypeScriptToSwiftType(propertyType: Type): string {
 		if (keyType && valueType) {
 			const swiftKeyType = mapTypeScriptToSwiftType(keyType);
 			const swiftValueType = mapTypeScriptToSwiftType(valueType);
-			return `[${swiftKeyType}: ${swiftValueType}]`;
+			return {
+				type: `[${swiftKeyType.type}: ${swiftValueType.type}]`,
+				defaultValue: "[:]",
+			};
 		}
 	}
 
 	if (propertyType.isInterface()) {
-		return getTypeName(propertyType);
+		const interfaceName = getTypeName(propertyType);
+		return { type: interfaceName, defaultValue: `${interfaceName}()` };
 	}
 
-	if (propertyType.isEnum()) {
-		return getTypeName(propertyType);
+	if (propertyType.isUnion()) {
+		// It's a union.
+		// These could be enums, nullable unions (T | null | undefined) or named aliases (type Status = "a" | "b")
+		const nonNullableType = propertyType.getNonNullableType();
+		if (nonNullableType.isEnum()) {
+			const enumDecl = nonNullableType
+				.getSymbolOrThrow()
+				.getDeclarations()
+				.find(Node.isEnumDeclaration);
+			if (!enumDecl) {
+				throw new Error(`Enum ${getTypeName(nonNullableType)} not found`);
+			}
+			return {
+				type: getTypeName(nonNullableType),
+				defaultValue: getEnumDefaultValue(enumDecl),
+			};
+		}
+
+		// filter out any null/undefined types
+		const unionTypes = propertyType.getUnionTypes();
+		const nonNullishTypes = unionTypes.filter(
+			(type) => !type.isUndefined() && !type.isNull(),
+		);
+
+		// does this union come from a named alias? (e.g., type Status = "a" | "b")
+		const aliasName = nonNullableType.getAliasSymbol()?.getName();
+		if (aliasName && nonNullableType.isUnion()) {
+			const defaultValue = getUnionAliasDefaultValue(nonNullishTypes);
+			return { type: aliasName, defaultValue };
+		}
+
+		// It's an inline union.
+		// Note: we currently don't support inline literal unions as we would need to auto-generate an enum.
+		const swiftTypes = nonNullishTypes.map((type) =>
+			mapTypeScriptToSwiftType(type),
+		);
+
+		// Deduplicate the resulting types (e.g true | false -> Bool)
+		const [swiftType] = dedupeTypes(swiftTypes);
+		if (swiftType) {
+			return { type: swiftType.type, defaultValue: swiftType.defaultValue };
+		}
+		throw new Error(`Unsupported union type: ${getTypeName(propertyType)}`);
 	}
 
 	throw new Error(`Unsupported TypeScript type: ${getTypeName(propertyType)}`);
@@ -150,56 +189,33 @@ function getRecordTypeArguments(type: Type): [Type?, Type?] {
 	return [aliasTypeArguments[0], aliasTypeArguments[1]];
 }
 
-/**
- * Get default value for Swift type
- */
-const DEFAULT_VALUE_MAPPING: Record<string, string> = {
-	string: '""',
-	number: "0.0",
-	boolean: "false",
-	any: "[:]",
-	Uint8Array: "Data()",
-};
-
-function getSwiftDefaultValue(propertyType: Type): string {
-	// Check if it's an array type
-	if (propertyType.isArray()) {
-		return "[]";
+// Get the default value from an enum declaration.
+// Currently this is just the first member.
+function getEnumDefaultValue(enumDecl: EnumDeclaration): string {
+	const members = enumDecl.getMembers();
+	const firstMemberName = members[0]?.getName();
+	if (!firstMemberName) {
+		throw new Error(`Enum ${enumDecl.getName()} has no members`);
 	}
+	return `.${firstMemberName}`;
+}
 
-	if (isRecordType(propertyType)) {
-		return "[:]";
+// Get the default value from a union alias. (e.g. type Status = "a" | "b")
+// Currently this is just the first literal.
+function getUnionAliasDefaultValue(unionTypes: Type[]): string {
+	const first = unionTypes[0];
+	if (first?.isStringLiteral()) {
+		const literal = String(first.getLiteralValue());
+		return `.${literal}`;
+	} else if (first?.isNumberLiteral()) {
+		const value = String(first.getLiteralValue());
+		// Numeric case names in Swift enums are prefixed with underscore
+		return `._${value}`;
+	} else {
+		throw new Error(
+			`Unsupported union type: ${first ? getTypeName(first) : "unknown"}`,
+		);
 	}
-
-	// Enums default to first case, e.g. .pending (detect via symbol declarations)
-	const symbol = propertyType.getSymbol();
-	const enumDecl = symbol?.getDeclarations().find(Node.isEnumDeclaration);
-	const firstMemberName = enumDecl?.getMembers()[0]?.getName();
-	if (firstMemberName) {
-		return `.${firstMemberName}`;
-	}
-
-	// If this is a union alias like type Status = "a" | "b",
-	// choose the first literal as the default case.
-	if (propertyType.isUnion() && propertyType.getNonNullableType().isUnion()) {
-		const unionTypes = propertyType
-			.getUnionTypes()
-			.filter((t) => !t.isUndefined() && !t.isNull());
-		const first = unionTypes[0];
-		if (first?.isStringLiteral()) {
-			const literal = String(first.getLiteralValue());
-			return `.${literal}`;
-		}
-		if (first?.isNumberLiteral()) {
-			const value = String(first.getLiteralValue());
-			// Numeric case names in Swift enums are prefixed with underscore
-			return `._${value}`;
-		}
-	}
-
-	// Handle non-array types
-	const typeText = getTypeName(propertyType);
-	return DEFAULT_VALUE_MAPPING[typeText] || `${typeText}()`;
 }
 
 /**
@@ -282,18 +298,14 @@ function generateSwiftRecord(interfaceDecl: InterfaceDeclaration): string {
 			const isOptional =
 				property.hasQuestionToken() || isOptionalUnion(propertyType);
 
-			const swiftType = mapTypeScriptToSwiftType(propertyType);
-			let defaultValue = getSwiftDefaultValue(propertyType);
-
-			// Handle optional types
-			if (isOptional) {
-				defaultValue = "nil";
-			}
+			const { type: swiftType, defaultValue } =
+				mapTypeScriptToSwiftType(propertyType);
 
 			const finalSwiftType = isOptional ? `${swiftType}?` : swiftType;
+			const finalDefaultValue = isOptional ? "nil" : defaultValue;
 
 			return `  @Field
-  var ${propertyName}: ${finalSwiftType} = ${defaultValue}`;
+  var ${propertyName}: ${finalSwiftType} = ${finalDefaultValue}`;
 		})
 		.join("\n\n");
 
