@@ -26,7 +26,7 @@ export interface AnyTypeRecord {
 }`,
 		unsupportedType: `
 export interface UnsupportedTypeRecord {
-  unsupportedType: ThisIsNotSupported;
+  unsupportedType: never;
 }`,
 		stringArray: `
 export interface StringArrayRecord {
@@ -508,7 +508,7 @@ describe("Swift Record Generation", () => {
 
 		it("should throw error for unsupported types", () => {
 			expect(() => generateSwiftRecords(testData.unsupportedType)).toThrow(
-				"Unsupported TypeScript type: ThisIsNotSupported",
+				"Unsupported TypeScript type: never",
 			);
 		});
 	});
