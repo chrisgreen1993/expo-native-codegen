@@ -57,66 +57,33 @@ function parseTypeScriptDeclarations(typescriptCode: string): {
 	};
 }
 
-function isUint8Array(propertyType: Type): boolean {
-	return getTypeName(propertyType) === "Uint8Array";
-}
-
-function isOptionalUnion(propertyType: Type): boolean {
-	return (
-		propertyType.isUnion() &&
-		propertyType
-			.getUnionTypes()
-			.some((type) => type.isUndefined() || type.isNull())
-	);
-}
-
-// Deduplicate types by the swift type name.
-function dedupeTypes(types: SwiftType[]): SwiftType[] {
-	const uniqueTypes = types.reduce(
-		(acc, swiftType) => {
-			acc[swiftType.type] = swiftType;
-			return acc;
-		},
-		{} as Record<string, SwiftType>,
-	);
-	return Object.values(uniqueTypes);
-}
-
 /**
  * Convert TypeScript type to Swift type recursively
  */
-function mapTypeScriptToSwiftType(propertyType: Type): SwiftType {
-	if (propertyType.isString()) {
+function mapTypeScriptToSwiftType(type: Type): SwiftType {
+	if (type.isString()) {
 		return { type: "String", defaultValue: '""' };
-	}
-	if (propertyType.isNumber()) {
+	} else if (type.isNumber()) {
 		return { type: "Double", defaultValue: "0.0" };
-	}
-	if (propertyType.isBoolean() || propertyType.isBooleanLiteral()) {
+	} else if (type.isBoolean() || type.isBooleanLiteral()) {
 		return { type: "Bool", defaultValue: "false" };
-	}
-	// Check if it's actually the 'any' type, not just any type
-	if (propertyType.isAny() && getTypeName(propertyType) === "any") {
+	} else if (type.isAny() && getTypeName(type) === "any") {
 		return { type: "Any", defaultValue: "[:]" };
-	}
-	if (isUint8Array(propertyType)) {
+	} else if (type.getSymbol()?.getName() === "Uint8Array") {
 		return { type: "Data", defaultValue: "Data()" };
-	}
-
-	// Handle array types recursively
-	if (propertyType.isArray()) {
-		const elementType = propertyType.getArrayElementType();
+	} else if (type.isArray()) {
+		// Handle array types recursively
+		const elementType = type.getArrayElementType();
 		if (!elementType) {
-			throw new Error(`Array ${getTypeName(propertyType)} has no element type`);
+			throw new Error(`Array ${getTypeName(type)} has no element type`);
 		}
 		return {
 			type: `[${mapTypeScriptToSwiftType(elementType).type}]`,
 			defaultValue: "[]",
 		};
-	}
-
-	if (isRecordType(propertyType)) {
-		const [keyType, valueType] = getRecordTypeArguments(propertyType);
+	} else if (type.getAliasSymbol()?.getName() === "Record") {
+		// Handle Record<> types
+		const [keyType, valueType] = type.getAliasTypeArguments();
 		if (keyType && valueType) {
 			const swiftKeyType = mapTypeScriptToSwiftType(keyType);
 			const swiftValueType = mapTypeScriptToSwiftType(valueType);
@@ -125,68 +92,37 @@ function mapTypeScriptToSwiftType(propertyType: Type): SwiftType {
 				defaultValue: "[:]",
 			};
 		}
-	}
-
-	if (propertyType.isInterface()) {
-		const interfaceName = getTypeName(propertyType);
-		return { type: interfaceName, defaultValue: `${interfaceName}()` };
-	}
-
-	if (propertyType.isUnion()) {
-		// It's a union.
-		// These could be enums, nullable unions (T | null | undefined) or named aliases (type Status = "a" | "b")
-		const nonNullableType = propertyType.getNonNullableType();
-		if (nonNullableType.isEnum()) {
-			const enumDecl = nonNullableType
-				.getSymbolOrThrow()
-				.getDeclarations()
-				.find(Node.isEnumDeclaration);
-			if (!enumDecl) {
-				throw new Error(`Enum ${getTypeName(nonNullableType)} not found`);
-			}
-			return {
-				type: getTypeName(nonNullableType),
-				defaultValue: getEnumDefaultValue(enumDecl),
-			};
-		}
-
-		// filter out any null/undefined types
-		const unionTypes = propertyType.getUnionTypes();
-		const nonNullishTypes = unionTypes.filter(
-			(type) => !type.isUndefined() && !type.isNull(),
+		throw new Error(
+			`Record type ${getTypeName(type)} has invalid type arguments`,
 		);
-
-		// does this union come from a named alias? (e.g., type Status = "a" | "b")
-		const aliasName = nonNullableType.getAliasSymbol()?.getName();
-		if (aliasName && nonNullableType.isUnion()) {
-			const defaultValue = getUnionAliasDefaultValue(nonNullishTypes);
+	} else if (type.isInterface()) {
+		const interfaceName = getTypeName(type);
+		return { type: interfaceName, defaultValue: `${interfaceName}()` };
+	} else if (type.isEnum()) {
+		const enumDecl = type
+			.getSymbolOrThrow()
+			.getDeclarations()
+			.find(Node.isEnumDeclaration);
+		if (!enumDecl) {
+			throw new Error(`Enum ${getTypeName(type)} not found`);
+		}
+		return {
+			type: getTypeName(type),
+			defaultValue: getEnumDefaultValue(enumDecl),
+		};
+	} else if (type.isUnion()) {
+		// Check if the union is a named alias (e.g. type Status = "a" | "b")
+		const aliasName = type.getAliasSymbol()?.getName();
+		if (aliasName) {
+			const unionTypes = type.getUnionTypes();
+			const defaultValue = getUnionAliasDefaultValue(unionTypes);
 			return { type: aliasName, defaultValue };
 		}
-
-		// It's an inline union.
-		// Note: we currently don't support inline literal unions as we would need to auto-generate an enum.
-		const swiftTypes = nonNullishTypes.map((type) =>
-			mapTypeScriptToSwiftType(type),
-		);
-
-		// Deduplicate the resulting types (e.g true | false -> Bool)
-		const [swiftType] = dedupeTypes(swiftTypes);
-		if (swiftType) {
-			return { type: swiftType.type, defaultValue: swiftType.defaultValue };
-		}
-		throw new Error(`Unsupported union type: ${getTypeName(propertyType)}`);
+		// If no alias name, it's an inline union and we don't support
+		throw new Error(`Unsupported inline union type: ${getTypeName(type)}`);
+	} else {
+		throw new Error(`Unsupported TypeScript type: ${getTypeName(type)}`);
 	}
-
-	throw new Error(`Unsupported TypeScript type: ${getTypeName(propertyType)}`);
-}
-
-function isRecordType(type: Type): boolean {
-	return type.getAliasSymbol()?.getName() === "Record";
-}
-
-function getRecordTypeArguments(type: Type): [Type?, Type?] {
-	const aliasTypeArguments = type.getAliasTypeArguments();
-	return [aliasTypeArguments[0], aliasTypeArguments[1]];
 }
 
 // Get the default value from an enum declaration.
@@ -294,12 +230,17 @@ function generateSwiftRecord(interfaceDecl: InterfaceDeclaration): string {
 		.map((property) => {
 			const propertyName = property.getName();
 			const propertyType = property.getType();
-			// Check if property is optional (either has question token or is union with undefined)
+			// Check if property is optional (either has question token or is nullable (e.g T | undefined))
 			const isOptional =
-				property.hasQuestionToken() || isOptionalUnion(propertyType);
+				property.hasQuestionToken() || propertyType.isNullable();
 
-			const { type: swiftType, defaultValue } =
-				mapTypeScriptToSwiftType(propertyType);
+			// Get the non-nullable type (e.g. T | undefined -> T)
+			// This allows us to handle the mapping without having to handle nullables ourselves
+			const nonNullablePropertyType = propertyType.getNonNullableType();
+
+			const { type: swiftType, defaultValue } = mapTypeScriptToSwiftType(
+				nonNullablePropertyType,
+			);
 
 			const finalSwiftType = isOptional ? `${swiftType}?` : swiftType;
 			const finalDefaultValue = isOptional ? "nil" : defaultValue;
