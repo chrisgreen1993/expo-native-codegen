@@ -1,0 +1,5 @@
+---
+description: Rules for parsing TypeScript
+alwaysApply: false
+---
+When parsing TypeScript code, only use the ts-morph npm package. Do not use regexes or string manipulation to parse.
