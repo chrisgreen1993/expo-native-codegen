@@ -65,7 +65,7 @@ function mapTypeScriptToSwiftType(type: Type): SwiftType {
 		return { type: "String", defaultValue: '""' };
 	} else if (type.isNumber()) {
 		return { type: "Double", defaultValue: "0.0" };
-	} else if (type.isBoolean() || type.isBooleanLiteral()) {
+	} else if (type.isBoolean()) {
 		return { type: "Bool", defaultValue: "false" };
 	} else if (type.isAny() && getTypeName(type) === "any") {
 		return { type: "Any", defaultValue: "[:]" };
