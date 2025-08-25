@@ -255,7 +255,7 @@ ${propertyFields}
 }`;
 }
 
-export function generateSwiftRecords(typescriptCode: string): string {
+export function generateSwiftCode(typescriptCode: string): string {
 	const { interfaces, enums, unionAliases } =
 		parseTypeScriptDeclarations(typescriptCode);
 
@@ -270,7 +270,7 @@ export function generateSwiftRecords(typescriptCode: string): string {
 		.join("\n\n");
 }
 
-export function generateKotlinRecords(typescriptCode: string): string {
+export function generateKotlinCode(typescriptCode: string): string {
 	const { interfaces } = parseTypeScriptDeclarations(typescriptCode);
 
 	if (interfaces.length === 0) {
@@ -288,6 +288,6 @@ class StubRecord : Record {
 }
 
 export default {
-	generateSwiftRecords,
-	generateKotlinRecords,
+	generateSwiftCode,
+	generateKotlinCode,
 };

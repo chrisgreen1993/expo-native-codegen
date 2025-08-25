@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { generateKotlinRecords, generateSwiftRecords } from "./index";
+import { generateKotlinCode, generateSwiftCode } from "./index";
 
 // Helper function to create test data
 function createTestData() {
@@ -155,7 +155,7 @@ describe("Swift Record Generation", () => {
 
 	describe("Primitive types", () => {
 		it("should handle string type", () => {
-			const result = generateSwiftRecords(testData.stringType);
+			const result = generateSwiftCode(testData.stringType);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct StringRecord: Record {
 			    @Field
@@ -168,7 +168,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle number type", () => {
-			const result = generateSwiftRecords(testData.numberType);
+			const result = generateSwiftCode(testData.numberType);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct NumberRecord: Record {
 			    @Field
@@ -181,7 +181,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle boolean type", () => {
-			const result = generateSwiftRecords(testData.booleanType);
+			const result = generateSwiftCode(testData.booleanType);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct BooleanRecord: Record {
 			    @Field
@@ -194,7 +194,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle any type", () => {
-			const result = generateSwiftRecords(testData.anyType);
+			const result = generateSwiftCode(testData.anyType);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct AnyTypeRecord: Record {
 			    @Field
@@ -209,7 +209,7 @@ describe("Swift Record Generation", () => {
 
 	describe("Array types", () => {
 		it("should handle string array", () => {
-			const result = generateSwiftRecords(testData.stringArray);
+			const result = generateSwiftCode(testData.stringArray);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct StringArrayRecord: Record {
 			    @Field
@@ -222,7 +222,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle number array", () => {
-			const result = generateSwiftRecords(testData.numberArray);
+			const result = generateSwiftCode(testData.numberArray);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct NumberArrayRecord: Record {
 			    @Field
@@ -235,7 +235,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle boolean array", () => {
-			const result = generateSwiftRecords(testData.booleanArray);
+			const result = generateSwiftCode(testData.booleanArray);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct BooleanArrayRecord: Record {
 			    @Field
@@ -250,7 +250,7 @@ describe("Swift Record Generation", () => {
 
 	describe("Map/Object types", () => {
 		it("should handle Record<string, string>", () => {
-			const result = generateSwiftRecords(testData.stringMap);
+			const result = generateSwiftCode(testData.stringMap);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct StringMapRecord: Record {
 			    @Field
@@ -263,7 +263,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle Record<string, any>", () => {
-			const result = generateSwiftRecords(testData.anyMap);
+			const result = generateSwiftCode(testData.anyMap);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct AnyMapRecord: Record {
 			    @Field
@@ -278,7 +278,7 @@ describe("Swift Record Generation", () => {
 
 	describe("Enum types", () => {
 		it("should handle string enum", () => {
-			const result = generateSwiftRecords(testData.enumType);
+			const result = generateSwiftCode(testData.enumType);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Status: String, Enumerable {
 			    case pending = "pending"
@@ -288,7 +288,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle numeric enum", () => {
-			const result = generateSwiftRecords(testData.numericEnumType);
+			const result = generateSwiftCode(testData.numericEnumType);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Direction: Int, Enumerable {
 			    case UP = 0
@@ -303,7 +303,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle string enum within record", () => {
-			const result = generateSwiftRecords(testData.nestedStringEnum);
+			const result = generateSwiftCode(testData.nestedStringEnum);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Status: String, Enumerable {
 			    case pending = "PENDING"
@@ -321,7 +321,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle numeric enum within record", () => {
-			const result = generateSwiftRecords(testData.nestedNumericEnum);
+			const result = generateSwiftCode(testData.nestedNumericEnum);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Direction: Int, Enumerable {
 			    case UP = 0
@@ -341,7 +341,7 @@ describe("Swift Record Generation", () => {
 
 	describe("Union types", () => {
 		it("should treat null/undefined unions as optional of base type", () => {
-			const result = generateSwiftRecords(testData.optionalUnion);
+			const result = generateSwiftCode(testData.optionalUnion);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct OptionalUnionRecord: Record {
 			    @Field
@@ -354,7 +354,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should create enum from string literal union alias", () => {
-			const result = generateSwiftRecords(testData.unionAliasString);
+			const result = generateSwiftCode(testData.unionAliasString);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Status: String, Enumerable {
 			    case pending = \"pending\"
@@ -372,7 +372,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should create enum from numeric literal union alias", () => {
-			const result = generateSwiftRecords(testData.unionAliasNumeric);
+			const result = generateSwiftCode(testData.unionAliasNumeric);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum Level: Int, Enumerable {
 			    case _1 = 1
@@ -393,7 +393,7 @@ describe("Swift Record Generation", () => {
 		it.todo(
 			"should synthesize enum from string literal union and handle optional",
 			() => {
-				const result = generateSwiftRecords(testData.literalStringUnion);
+				const result = generateSwiftCode(testData.literalStringUnion);
 				expect(result).toMatchInlineSnapshot(`
 			  "enum Pending_Active_Union: String, Enumerable {
 			    case pending = \"pending\"
@@ -414,7 +414,7 @@ describe("Swift Record Generation", () => {
 		it.todo(
 			"should handle numeric literal unions with content-based naming",
 			() => {
-				const result = generateSwiftRecords(testData.numericLiteralUnion);
+				const result = generateSwiftCode(testData.numericLiteralUnion);
 				expect(result).toMatchInlineSnapshot(`
 			  "enum 1_2_3_NumericUnion: Int, Enumerable {
 			    case _1 = 1
@@ -436,7 +436,7 @@ describe("Swift Record Generation", () => {
 
 	describe("Binary data handling", () => {
 		it("should handle Uint8Array", () => {
-			const result = generateSwiftRecords(testData.binaryDataRecord);
+			const result = generateSwiftCode(testData.binaryDataRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct BinaryDataRecord: Record {
 			    @Field
@@ -451,7 +451,7 @@ describe("Swift Record Generation", () => {
 
 	describe("Nested records", () => {
 		it("should handle nested interface", () => {
-			const result = generateSwiftRecords(testData.nestedRecord);
+			const result = generateSwiftCode(testData.nestedRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct Address: Record {
 			    @Field
@@ -472,7 +472,7 @@ describe("Swift Record Generation", () => {
 		});
 
 		it("should handle nested interface array", () => {
-			const result = generateSwiftRecords(testData.nestedArrayRecord);
+			const result = generateSwiftCode(testData.nestedArrayRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "public struct Address: Record {
 			    @Field
@@ -495,19 +495,19 @@ describe("Swift Record Generation", () => {
 
 	describe("Edge cases", () => {
 		it("should handle empty TypeScript code", () => {
-			const result = generateSwiftRecords("");
+			const result = generateSwiftCode("");
 			expect(result).toBe("");
 		});
 
 		it("should handle interface with no properties", () => {
-			const result = generateSwiftRecords(testData.emptyRecord);
+			const result = generateSwiftCode(testData.emptyRecord);
 			expect(result).toMatchInlineSnapshot(
 				`"public struct EmptyRecord: Record {}"`,
 			);
 		});
 
 		it("should throw error for unsupported types", () => {
-			expect(() => generateSwiftRecords(testData.unsupportedType)).toThrow(
+			expect(() => generateSwiftCode(testData.unsupportedType)).toThrow(
 				"Unsupported TypeScript type: never",
 			);
 		});
@@ -519,7 +519,7 @@ describe.todo("Kotlin Record Generation", () => {
 
 	describe("Primitive types", () => {
 		it("should handle string type", () => {
-			const result = generateKotlinRecords(testData.stringType);
+			const result = generateKotlinCode(testData.stringType);
 			expect(result).toMatchInlineSnapshot(`
 			  "class StringRecord : Record {
 			    @Field
@@ -532,7 +532,7 @@ describe.todo("Kotlin Record Generation", () => {
 		});
 
 		it("should handle number type", () => {
-			const result = generateKotlinRecords(testData.numberType);
+			const result = generateKotlinCode(testData.numberType);
 			expect(result).toMatchInlineSnapshot(`
 			  "class NumberRecord : Record {
 			    @Field
@@ -545,7 +545,7 @@ describe.todo("Kotlin Record Generation", () => {
 		});
 
 		it("should handle boolean type", () => {
-			const result = generateKotlinRecords(testData.booleanType);
+			const result = generateKotlinCode(testData.booleanType);
 			expect(result).toMatchInlineSnapshot(`
 			  "class BooleanRecord : Record {
 			    @Field
@@ -560,7 +560,7 @@ describe.todo("Kotlin Record Generation", () => {
 
 	describe("Array types", () => {
 		it("should handle string array", () => {
-			const result = generateKotlinRecords(testData.stringArray);
+			const result = generateKotlinCode(testData.stringArray);
 			expect(result).toMatchInlineSnapshot(`
 			  "class StringArrayRecord : Record {
 			    @Field
@@ -573,7 +573,7 @@ describe.todo("Kotlin Record Generation", () => {
 		});
 
 		it("should handle number array", () => {
-			const result = generateKotlinRecords(testData.numberArray);
+			const result = generateKotlinCode(testData.numberArray);
 			expect(result).toMatchInlineSnapshot(`
 			  "class NumberArrayRecord : Record {
 			    @Field
@@ -586,7 +586,7 @@ describe.todo("Kotlin Record Generation", () => {
 		});
 
 		it("should handle boolean array", () => {
-			const result = generateKotlinRecords(testData.booleanArray);
+			const result = generateKotlinCode(testData.booleanArray);
 			expect(result).toMatchInlineSnapshot(`
 			  "class BooleanArrayRecord : Record {
 			    @Field
@@ -601,7 +601,7 @@ describe.todo("Kotlin Record Generation", () => {
 
 	describe("Map/Object types", () => {
 		it("should handle Record<string, string>", () => {
-			const result = generateKotlinRecords(testData.stringMap);
+			const result = generateKotlinCode(testData.stringMap);
 			expect(result).toMatchInlineSnapshot(`
 			  "class StringMapRecord : Record {
 			    @Field
@@ -614,7 +614,7 @@ describe.todo("Kotlin Record Generation", () => {
 		});
 
 		it("should handle Record<string, any>", () => {
-			const result = generateKotlinRecords(testData.anyMap);
+			const result = generateKotlinCode(testData.anyMap);
 			expect(result).toMatchInlineSnapshot(`
 			  "class AnyMapRecord : Record {
 			    @Field
@@ -629,7 +629,7 @@ describe.todo("Kotlin Record Generation", () => {
 
 	describe("Enum types", () => {
 		it("should handle string enum", () => {
-			const result = generateKotlinRecords(testData.enumType);
+			const result = generateKotlinCode(testData.enumType);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum class Status(val value: String) : Enumerable {
 			    PENDING("pending"),
@@ -649,7 +649,7 @@ describe.todo("Kotlin Record Generation", () => {
 
 	describe("Binary data handling", () => {
 		it("should handle Uint8Array", () => {
-			const result = generateKotlinRecords(testData.binaryDataRecord);
+			const result = generateKotlinCode(testData.binaryDataRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "class BinaryDataRecord : Record {
 			    @Field
@@ -664,7 +664,7 @@ describe.todo("Kotlin Record Generation", () => {
 
 	describe("Nested records", () => {
 		it("should handle nested interface", () => {
-			const result = generateKotlinRecords(testData.nestedRecord);
+			const result = generateKotlinCode(testData.nestedRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "class Address : Record {
 			    @Field
@@ -685,7 +685,7 @@ describe.todo("Kotlin Record Generation", () => {
 		});
 
 		it("should handle nested interface array", () => {
-			const result = generateKotlinRecords(testData.nestedArrayRecord);
+			const result = generateKotlinCode(testData.nestedArrayRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "class Address : Record {
 			    @Field
@@ -708,12 +708,12 @@ describe.todo("Kotlin Record Generation", () => {
 
 	describe("Edge cases", () => {
 		it("should handle empty TypeScript code", () => {
-			const result = generateKotlinRecords("");
+			const result = generateKotlinCode("");
 			expect(result).toBe("");
 		});
 
 		it("should handle interface with no properties", () => {
-			const result = generateKotlinRecords(testData.emptyRecord);
+			const result = generateKotlinCode(testData.emptyRecord);
 			expect(result).toMatchInlineSnapshot(`
 			  "class EmptyRecord : Record {
 			  }"
