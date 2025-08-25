@@ -157,7 +157,9 @@ describe("Swift Record Generation", () => {
 		it("should handle string type", () => {
 			const result = generateSwiftCode(testData.stringType);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct StringRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct StringRecord: Record {
 			    @Field
 			    var name: String = ""
 
@@ -170,7 +172,9 @@ describe("Swift Record Generation", () => {
 		it("should handle number type", () => {
 			const result = generateSwiftCode(testData.numberType);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct NumberRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct NumberRecord: Record {
 			    @Field
 			    var age: Double = 0.0
 
@@ -183,7 +187,9 @@ describe("Swift Record Generation", () => {
 		it("should handle boolean type", () => {
 			const result = generateSwiftCode(testData.booleanType);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct BooleanRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct BooleanRecord: Record {
 			    @Field
 			    var isActive: Bool = false
 
@@ -196,7 +202,9 @@ describe("Swift Record Generation", () => {
 		it("should handle any type", () => {
 			const result = generateSwiftCode(testData.anyType);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct AnyTypeRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct AnyTypeRecord: Record {
 			    @Field
 			    var genericData: Any = [:]
 
@@ -211,7 +219,9 @@ describe("Swift Record Generation", () => {
 		it("should handle string array", () => {
 			const result = generateSwiftCode(testData.stringArray);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct StringArrayRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct StringArrayRecord: Record {
 			    @Field
 			    var tags: [String] = []
 
@@ -224,7 +234,9 @@ describe("Swift Record Generation", () => {
 		it("should handle number array", () => {
 			const result = generateSwiftCode(testData.numberArray);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct NumberArrayRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct NumberArrayRecord: Record {
 			    @Field
 			    var scores: [Double] = []
 
@@ -237,7 +249,9 @@ describe("Swift Record Generation", () => {
 		it("should handle boolean array", () => {
 			const result = generateSwiftCode(testData.booleanArray);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct BooleanArrayRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct BooleanArrayRecord: Record {
 			    @Field
 			    var flags: [Bool] = []
 
@@ -252,7 +266,9 @@ describe("Swift Record Generation", () => {
 		it("should handle Record<string, string>", () => {
 			const result = generateSwiftCode(testData.stringMap);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct StringMapRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct StringMapRecord: Record {
 			    @Field
 			    var metadata: [String: String] = [:]
 
@@ -265,7 +281,9 @@ describe("Swift Record Generation", () => {
 		it("should handle Record<string, any>", () => {
 			const result = generateSwiftCode(testData.anyMap);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct AnyMapRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct AnyMapRecord: Record {
 			    @Field
 			    var config: [String: Any] = [:]
 
@@ -280,7 +298,9 @@ describe("Swift Record Generation", () => {
 		it("should handle string enum", () => {
 			const result = generateSwiftCode(testData.enumType);
 			expect(result).toMatchInlineSnapshot(`
-			  "enum Status: String, Enumerable {
+			  "import ExpoModulesCore
+
+			  enum Status: String, Enumerable {
 			    case pending = "pending"
 			    case active = "active"
 			  }"
@@ -290,7 +310,9 @@ describe("Swift Record Generation", () => {
 		it("should handle numeric enum", () => {
 			const result = generateSwiftCode(testData.numericEnumType);
 			expect(result).toMatchInlineSnapshot(`
-			  "enum Direction: Int, Enumerable {
+			  "import ExpoModulesCore
+
+			  enum Direction: Int, Enumerable {
 			    case UP = 0
 			    case DOWN = 1
 			  }
@@ -305,7 +327,9 @@ describe("Swift Record Generation", () => {
 		it("should handle string enum within record", () => {
 			const result = generateSwiftCode(testData.nestedStringEnum);
 			expect(result).toMatchInlineSnapshot(`
-			  "enum Status: String, Enumerable {
+			  "import ExpoModulesCore
+
+			  enum Status: String, Enumerable {
 			    case pending = "PENDING"
 			    case active = "ACTIVE"
 			  }
@@ -323,7 +347,9 @@ describe("Swift Record Generation", () => {
 		it("should handle numeric enum within record", () => {
 			const result = generateSwiftCode(testData.nestedNumericEnum);
 			expect(result).toMatchInlineSnapshot(`
-			  "enum Direction: Int, Enumerable {
+			  "import ExpoModulesCore
+
+			  enum Direction: Int, Enumerable {
 			    case UP = 0
 			    case DOWN = 1
 			  }
@@ -343,7 +369,9 @@ describe("Swift Record Generation", () => {
 		it("should treat null/undefined unions as optional of base type", () => {
 			const result = generateSwiftCode(testData.optionalUnion);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct OptionalUnionRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct OptionalUnionRecord: Record {
 			    @Field
 			    var description: String? = nil
 
@@ -356,9 +384,11 @@ describe("Swift Record Generation", () => {
 		it("should create enum from string literal union alias", () => {
 			const result = generateSwiftCode(testData.unionAliasString);
 			expect(result).toMatchInlineSnapshot(`
-			  "enum Status: String, Enumerable {
-			    case pending = \"pending\"
-			    case active = \"active\"
+			  "import ExpoModulesCore
+
+			  enum Status: String, Enumerable {
+			    case pending = "pending"
+			    case active = "active"
 			  }
 
 			  public struct AliasUnionRecord: Record {
@@ -374,7 +404,9 @@ describe("Swift Record Generation", () => {
 		it("should create enum from numeric literal union alias", () => {
 			const result = generateSwiftCode(testData.unionAliasNumeric);
 			expect(result).toMatchInlineSnapshot(`
-			  "enum Level: Int, Enumerable {
+			  "import ExpoModulesCore
+
+			  enum Level: Int, Enumerable {
 			    case _1 = 1
 			    case _2 = 2
 			    case _3 = 3
@@ -438,7 +470,9 @@ describe("Swift Record Generation", () => {
 		it("should handle Uint8Array", () => {
 			const result = generateSwiftCode(testData.binaryDataRecord);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct BinaryDataRecord: Record {
+			  "import ExpoModulesCore
+
+			  public struct BinaryDataRecord: Record {
 			    @Field
 			    var data: Data = Data()
 
@@ -453,7 +487,9 @@ describe("Swift Record Generation", () => {
 		it("should handle nested interface", () => {
 			const result = generateSwiftCode(testData.nestedRecord);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct Address: Record {
+			  "import ExpoModulesCore
+
+			  public struct Address: Record {
 			    @Field
 			    var street: String = ""
 
@@ -474,7 +510,9 @@ describe("Swift Record Generation", () => {
 		it("should handle nested interface array", () => {
 			const result = generateSwiftCode(testData.nestedArrayRecord);
 			expect(result).toMatchInlineSnapshot(`
-			  "public struct Address: Record {
+			  "import ExpoModulesCore
+
+			  public struct Address: Record {
 			    @Field
 			    var street: String = ""
 
@@ -502,7 +540,11 @@ describe("Swift Record Generation", () => {
 		it("should handle interface with no properties", () => {
 			const result = generateSwiftCode(testData.emptyRecord);
 			expect(result).toMatchInlineSnapshot(
-				`"public struct EmptyRecord: Record {}"`,
+				`
+				  "import ExpoModulesCore
+
+				  public struct EmptyRecord: Record {}"
+				`,
 			);
 		});
 

@@ -265,9 +265,18 @@ export function generateSwiftCode(typescriptCode: string): string {
 		.join("\n\n");
 	const swiftRecords = interfaces.map(generateSwiftRecord).join("\n\n");
 
-	return [swiftEnums, swiftAliasEnums, swiftRecords]
+	const swiftCode = [swiftEnums, swiftAliasEnums, swiftRecords]
 		.filter((s) => Boolean(s))
 		.join("\n\n");
+
+	// If there's no Swift code to generate, return empty string
+	if (!swiftCode) {
+		return "";
+	}
+
+	return `import ExpoModulesCore
+
+${swiftCode}`;
 }
 
 export function generateKotlinCode(typescriptCode: string): string {
