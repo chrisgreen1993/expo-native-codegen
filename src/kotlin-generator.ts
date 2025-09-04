@@ -1,4 +1,5 @@
 import type {
+	CodegenConfig,
 	IntermediateDeclaration,
 	IntermediateEnumDeclaration,
 	IntermediateRecordDeclaration,
@@ -159,6 +160,7 @@ ${propertyFields}
 
 export function generateKotlinCodeFromIR(
 	irDeclarations: IntermediateDeclaration[],
+	config: CodegenConfig["kotlin"],
 ): string {
 	const kotlinEnums = irDeclarations
 		.filter((decl) => decl.kind === "enum")
@@ -179,5 +181,9 @@ export function generateKotlinCodeFromIR(
 		return "";
 	}
 
-	return kotlinCode;
+	return `package ${config.packageName}
+
+import expo.modules.kotlin.*
+
+${kotlinCode}`;
 }

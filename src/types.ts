@@ -4,6 +4,13 @@ import type {
 	TypeAliasDeclaration,
 } from "ts-morph";
 
+export interface CodegenConfig {
+	kotlin: {
+		packageName: string;
+	};
+	swift?: Record<string, never>;
+}
+
 export type TSDeclaration =
 	| EnumDeclaration
 	| InterfaceDeclaration

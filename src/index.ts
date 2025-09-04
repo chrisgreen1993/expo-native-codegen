@@ -2,7 +2,7 @@ import { Project } from "ts-morph";
 import { buildIntermediateRepresentation } from "./ir-builder";
 import { generateKotlinCodeFromIR } from "./kotlin-generator";
 import { generateSwiftCodeFromIR } from "./swift-generator";
-import type { TSDeclaration } from "./types";
+import type { CodegenConfig, TSDeclaration } from "./types";
 
 export function getDeclarations(typescriptCode: string): TSDeclaration[] {
 	if (!typescriptCode.trim()) return [];
@@ -20,16 +20,23 @@ export function getDeclarations(typescriptCode: string): TSDeclaration[] {
 	];
 }
 
-export function generateSwiftCode(typescriptCode: string): string {
+export function generateSwiftCode(
+	typescriptCode: string,
+	_config?: CodegenConfig,
+): string {
 	const declarations = getDeclarations(typescriptCode);
 	const irDeclarations = buildIntermediateRepresentation(declarations);
 	return generateSwiftCodeFromIR(irDeclarations);
 }
 
-export function generateKotlinCode(typescriptCode: string): string {
+export function generateKotlinCode(
+	typescriptCode: string,
+	config: CodegenConfig,
+): string {
 	const declarations = getDeclarations(typescriptCode);
 	const irDeclarations = buildIntermediateRepresentation(declarations);
-	return generateKotlinCodeFromIR(irDeclarations);
+
+	return generateKotlinCodeFromIR(irDeclarations, config.kotlin);
 }
 
 export default {
