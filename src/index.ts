@@ -1,249 +1,168 @@
-import {
-	type EnumDeclaration,
-	type InterfaceDeclaration,
-	Node,
-	Project,
-	type Type,
-	type TypeAliasDeclaration,
-} from "ts-morph";
+import { Project } from "ts-morph";
+import { buildIntermediateRepresentation } from "./ir-builder";
+import type {
+	IntermediateDeclaration,
+	IntermediateEnumDeclaration,
+	IntermediateRecordDeclaration,
+	IntermediateType,
+	TSDeclaration,
+} from "./types";
 
 interface SwiftType {
 	type: string;
 	defaultValue: string;
 }
 
-function getTypeName(type: Type): string {
-	return type.getSymbol()?.getName() || type.getText();
-}
-
-/**
- * Parse TypeScript code once and extract all interface and enum declarations
- */
-function parseTypeScriptDeclarations(typescriptCode: string): {
-	interfaces: InterfaceDeclaration[];
-	enums: EnumDeclaration[];
-	unionAliases: TypeAliasDeclaration[];
-} {
-	if (!typescriptCode.trim()) {
-		return { interfaces: [], enums: [], unionAliases: [] };
-	}
+export function getDeclarations(typescriptCode: string): TSDeclaration[] {
+	if (!typescriptCode.trim()) return [];
 
 	const project = new Project({
 		useInMemoryFileSystem: true,
-		compilerOptions: {
-			strictNullChecks: true,
-		},
+		compilerOptions: { strictNullChecks: true },
 	});
 	const sourceFile = project.createSourceFile("input.ts", typescriptCode);
 
-	return {
-		interfaces: sourceFile.getInterfaces(),
-		enums: sourceFile.getEnums(),
-		unionAliases: sourceFile.getTypeAliases().filter((alias) => {
-			const aliasType = alias.getType();
-			if (!aliasType.isUnion()) return false;
-			const unionTypes = aliasType.getUnionTypes();
-			const literalMembers = unionTypes.filter(
-				(t) => t.isStringLiteral() || t.isNumberLiteral(),
-			);
-			// Must be a union of only string/number literals (excluding null/undefined)
-			const nonNullish = unionTypes.filter(
-				(t) => !t.isUndefined() && !t.isNull(),
-			);
-			return (
-				nonNullish.length > 0 && nonNullish.length === literalMembers.length
-			);
-		}),
-	};
+	return [
+		...sourceFile.getInterfaces(),
+		...sourceFile.getEnums(),
+		...sourceFile.getTypeAliases(),
+	];
 }
 
-/**
- * Convert TypeScript type to Swift type recursively
- */
-function mapTypeScriptToSwiftType(type: Type): SwiftType {
-	if (type.isString()) {
-		return { type: "String", defaultValue: '""' };
-	} else if (type.isNumber()) {
-		return { type: "Double", defaultValue: "0.0" };
-	} else if (type.isBoolean()) {
-		return { type: "Bool", defaultValue: "false" };
-	} else if (type.isAny() && getTypeName(type) === "any") {
-		return { type: "Any", defaultValue: "[:]" };
-	} else if (type.getSymbol()?.getName() === "Uint8Array") {
-		return { type: "Data", defaultValue: "Data()" };
-	} else if (type.isArray()) {
-		// Handle array types recursively
-		const elementType = type.getArrayElementType();
-		if (!elementType) {
-			throw new Error(`Array ${getTypeName(type)} has no element type`);
+function mapIntermediateTypeToSwift(
+	type: IntermediateType,
+	declarations: IntermediateDeclaration[],
+): SwiftType {
+	switch (type.kind) {
+		case "string":
+			return { type: "String", defaultValue: '""' };
+		case "number":
+			return { type: "Double", defaultValue: "0.0" };
+		case "boolean":
+			return { type: "Bool", defaultValue: "false" };
+		case "any":
+			return { type: "Any", defaultValue: "[:]" };
+		case "byte-array":
+			return { type: "Data", defaultValue: "Data()" };
+		case "array": {
+			const elementSwift = mapIntermediateTypeToSwift(
+				type.elementType,
+				declarations,
+			);
+			return { type: `[${elementSwift.type}]`, defaultValue: "[]" };
 		}
-		return {
-			type: `[${mapTypeScriptToSwiftType(elementType).type}]`,
-			defaultValue: "[]",
-		};
-	} else if (type.getAliasSymbol()?.getName() === "Record") {
-		// Handle Record<> types
-		const [keyType, valueType] = type.getAliasTypeArguments();
-		if (keyType && valueType) {
-			const swiftKeyType = mapTypeScriptToSwiftType(keyType);
-			const swiftValueType = mapTypeScriptToSwiftType(valueType);
+		case "map": {
+			const valueSwift = mapIntermediateTypeToSwift(
+				type.valueType,
+				declarations,
+			);
+			const keySwift = mapIntermediateTypeToSwift(type.keyType, declarations);
 			return {
-				type: `[${swiftKeyType.type}: ${swiftValueType.type}]`,
+				type: `[${keySwift.type}: ${valueSwift.type}]`,
 				defaultValue: "[:]",
 			};
 		}
-		throw new Error(
-			`Record type ${getTypeName(type)} has invalid type arguments`,
-		);
-	} else if (type.isInterface()) {
-		const interfaceName = getTypeName(type);
-		return { type: interfaceName, defaultValue: `${interfaceName}()` };
-	} else if (type.isEnum()) {
-		const enumDecl = type
-			.getSymbolOrThrow()
-			.getDeclarations()
-			.find(Node.isEnumDeclaration);
-		if (!enumDecl) {
-			throw new Error(`Enum ${getTypeName(type)} not found`);
+		case "enum": {
+			// Find the enum declaration and get the default value
+			const enumDecl = declarations.find(
+				(d) => d.kind === "enum" && d.name === type.name,
+			);
+			if (enumDecl && enumDecl.kind === "enum") {
+				const defaultValue = getEnumDefaultValue(enumDecl);
+				return { type: type.name, defaultValue };
+			}
+			return { type: type.name, defaultValue: `${type.name}()` };
 		}
-		return {
-			type: getTypeName(type),
-			defaultValue: getEnumDefaultValue(enumDecl),
-		};
-	} else if (type.isUnion()) {
-		// Check if the union is a named alias (e.g. type Status = "a" | "b")
-		const aliasName = type.getAliasSymbol()?.getName();
-		if (aliasName) {
-			const unionTypes = type.getUnionTypes();
-			const defaultValue = getUnionAliasDefaultValue(unionTypes);
-			return { type: aliasName, defaultValue };
+		case "record":
+			return { type: type.name, defaultValue: `${type.name}()` };
+		default: {
+			const _exhaustiveCheck: never = type as never;
+			throw new Error("Unsupported intermediate type");
 		}
-		// If no alias name, it's an inline union and we don't support
-		throw new Error(`Unsupported inline union type: ${getTypeName(type)}`);
-	} else {
-		throw new Error(`Unsupported TypeScript type: ${getTypeName(type)}`);
 	}
 }
 
-// Get the default value from an enum declaration.
-// Currently this is just the first member.
-function getEnumDefaultValue(enumDecl: EnumDeclaration): string {
-	const members = enumDecl.getMembers();
-	const firstMemberName = members[0]?.getName();
-	if (!firstMemberName) {
-		throw new Error(`Enum ${enumDecl.getName()} has no members`);
+function generateSwiftEnumFromIR(
+	enumDecl: IntermediateEnumDeclaration,
+): string {
+	if (enumDecl.kind !== "enum") {
+		throw new Error("Expected enum declaration");
 	}
-	return `.${firstMemberName}`;
-}
 
-// Get the default value from a union alias. (e.g. type Status = "a" | "b")
-// Currently this is just the first literal.
-function getUnionAliasDefaultValue(unionTypes: Type[]): string {
-	const first = unionTypes[0];
-	if (first?.isStringLiteral()) {
-		const literal = String(first.getLiteralValue());
-		return `.${literal}`;
-	} else if (first?.isNumberLiteral()) {
-		const value = String(first.getLiteralValue());
-		// Numeric case names in Swift enums are prefixed with underscore
-		return `._${value}`;
-	} else {
-		throw new Error(
-			`Unsupported union type: ${first ? getTypeName(first) : "unknown"}`,
-		);
-	}
-}
+	const enumName = enumDecl.name;
+	const members = enumDecl.members;
 
-/**
- * Generate Swift enum code for a single enum declaration
- * TODO: Error handling for heterogeneous enums (mix string and numeric)
- */
-function generateSwiftEnum(enumDecl: EnumDeclaration): string {
-	const enumName = enumDecl.getName();
-	const members = enumDecl.getMembers();
-
-	const hasStringInitializer = members.some((m) =>
-		Node.isStringLiteral(m.getInitializer()),
-	);
-
+	const hasStringInitializer = members.some((m) => typeof m.value === "string");
 	const swiftType = hasStringInitializer ? "String" : "Int";
 
 	const cases = members
 		.map((member) => {
-			const name = member.getName();
+			const name = member.name;
 			if (swiftType === "Int") {
-				const value = member.getValue();
-				return `  case ${name} = ${String(value)}`;
+				const value = member.value;
+				// Numeric type enums are prefixed with an underscores due to Swift naming limitations.
+				const caseName = name === value.toString() ? `_${name}` : name;
+				return `  case ${caseName} = ${value}`;
+			} else {
+				const value = member.value;
+				return `  case ${name} = "${value}"`;
 			}
-
-			// String enums must have string literal initializers in TypeScript
-			const initializer = member.getInitializerOrThrow();
-			return `  case ${name} = ${initializer.getText()}`;
 		})
 		.join("\n");
 
 	return `enum ${enumName}: ${swiftType}, Enumerable {\n${cases}\n}`;
 }
 
-// Generate Swift enum from an alias that is a union of string/number literals
-function generateSwiftEnumFromUnionAlias(alias: TypeAliasDeclaration): string {
-	const name = alias.getName();
-	const aliasType = alias.getType();
-	const unionTypes = aliasType
-		.getUnionTypes()
-		.filter((t) => !t.isUndefined() && !t.isNull());
+// The enum default value is the first member's value.
+function getEnumDefaultValue(enumDecl: IntermediateEnumDeclaration): string {
+	if (enumDecl.kind !== "enum") {
+		throw new Error("Expected enum declaration");
+	}
 
-	const hasStringInitializer = unionTypes.every((t) => t.isStringLiteral());
+	const firstMember = enumDecl.members[0];
+	if (!firstMember) {
+		throw new Error(`Enum ${enumDecl.name} has no members`);
+	}
 
-	const swiftType = hasStringInitializer ? "String" : "Int";
+	// Check if this is a numeric type alias union (name matches value) vs regular enum
+	// Numeric type alias unions are prefixed with an underscores due to Swift naming limitations.
+	const isNumericTypeAliasUnion =
+		typeof firstMember.value === "number" &&
+		firstMember.name === firstMember.value.toString();
 
-	const cases = unionTypes
-		.map((t) => {
-			if (t.isStringLiteral()) {
-				const value = String(t.getLiteralValue());
-				return `  case ${value} = "${value}"`;
-			}
-			if (t.isNumberLiteral()) {
-				const num = String(t.getLiteralValue());
-				return `  case _${num} = ${num}`;
-			}
-			return "";
-		})
-		.filter(Boolean)
-		.join("\n");
+	const caseName = isNumericTypeAliasUnion
+		? `_${firstMember.name}`
+		: firstMember.name;
 
-	return `enum ${name}: ${swiftType}, Enumerable {\n${cases}\n}`;
+	return `.${caseName}`;
 }
 
-/**
- * Generate Swift Record code for a single interface
- */
-function generateSwiftRecord(interfaceDecl: InterfaceDeclaration): string {
-	const interfaceName = interfaceDecl.getName();
-	const properties = interfaceDecl.getProperties();
+function generateSwiftRecordFromIR(
+	recordDecl: IntermediateRecordDeclaration,
+	allDeclarations: IntermediateDeclaration[],
+): string {
+	if (recordDecl.kind !== "record") {
+		throw new Error("Expected interface declaration");
+	}
+
+	const interfaceName = recordDecl.name;
+	const properties = recordDecl.properties;
 
 	if (properties.length === 0) {
-		return `public struct ${interfaceName}: Record {}`;
+		return `public struct ${recordDecl.name}: Record {}`;
 	}
 
 	const propertyFields = properties
 		.map((property) => {
-			const propertyName = property.getName();
-			const propertyType = property.getType();
-			// Check if property is optional (either has question token or is nullable (e.g T | undefined))
-			const isOptional =
-				property.hasQuestionToken() || propertyType.isNullable();
+			const propertyName = property.name;
+			const isOptional = property.isOptional;
 
-			// Get the non-nullable type (e.g. T | undefined -> T)
-			// This allows us to handle the mapping without having to handle nullables ourselves
-			const nonNullablePropertyType = propertyType.getNonNullableType();
-
-			const { type: swiftType, defaultValue } = mapTypeScriptToSwiftType(
-				nonNullablePropertyType,
+			const swiftType = mapIntermediateTypeToSwift(
+				property.type,
+				allDeclarations,
 			);
-
-			const finalSwiftType = isOptional ? `${swiftType}?` : swiftType;
-			const finalDefaultValue = isOptional ? "nil" : defaultValue;
+			const finalSwiftType = isOptional ? `${swiftType.type}?` : swiftType.type;
+			const finalDefaultValue = isOptional ? "nil" : swiftType.defaultValue;
 
 			return `  @Field
   var ${propertyName}: ${finalSwiftType} = ${finalDefaultValue}`;
@@ -256,16 +175,20 @@ ${propertyFields}
 }
 
 export function generateSwiftCode(typescriptCode: string): string {
-	const { interfaces, enums, unionAliases } =
-		parseTypeScriptDeclarations(typescriptCode);
+	const declarations = getDeclarations(typescriptCode);
+	const irDeclarations = buildIntermediateRepresentation(declarations);
 
-	const swiftEnums = enums.map(generateSwiftEnum).join("\n\n");
-	const swiftAliasEnums = unionAliases
-		.map((alias) => generateSwiftEnumFromUnionAlias(alias))
+	const swiftEnums = irDeclarations
+		.filter((decl) => decl.kind === "enum")
+		.map(generateSwiftEnumFromIR)
 		.join("\n\n");
-	const swiftRecords = interfaces.map(generateSwiftRecord).join("\n\n");
 
-	const swiftCode = [swiftEnums, swiftAliasEnums, swiftRecords]
+	const swiftRecords = irDeclarations
+		.filter((decl) => decl.kind === "record")
+		.map((decl) => generateSwiftRecordFromIR(decl, irDeclarations))
+		.join("\n\n");
+
+	const swiftCode = [swiftEnums, swiftRecords]
 		.filter((s) => Boolean(s))
 		.join("\n\n");
 
@@ -279,21 +202,8 @@ export function generateSwiftCode(typescriptCode: string): string {
 ${swiftCode}`;
 }
 
-export function generateKotlinCode(typescriptCode: string): string {
-	const { interfaces } = parseTypeScriptDeclarations(typescriptCode);
-
-	if (interfaces.length === 0) {
-		return "";
-	}
-
-	// For now, just return a basic structure showing we found the interfaces
-	const interfaceNames = interfaces.map((i) => i.getName()).join(", ");
-	return `// Found interfaces: ${interfaceNames}
-// TODO: Implement full Kotlin generation
-class StubRecord : Record {
-	@Field
-	val notImplemented: String = "parsing works"
-}`;
+export function generateKotlinCode(_typescriptCode: string): string {
+	return "";
 }
 
 export default {
