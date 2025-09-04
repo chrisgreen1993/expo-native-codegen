@@ -1,6 +1,7 @@
 import { Project } from "ts-morph";
 import { buildIntermediateRepresentation } from "./ir-builder";
-import { generateSwiftCode as generateSwiftFromIR } from "./swift-generator";
+import { generateKotlinCodeFromIR } from "./kotlin-generator";
+import { generateSwiftCodeFromIR } from "./swift-generator";
 import type { TSDeclaration } from "./types";
 
 export function getDeclarations(typescriptCode: string): TSDeclaration[] {
@@ -22,11 +23,13 @@ export function getDeclarations(typescriptCode: string): TSDeclaration[] {
 export function generateSwiftCode(typescriptCode: string): string {
 	const declarations = getDeclarations(typescriptCode);
 	const irDeclarations = buildIntermediateRepresentation(declarations);
-	return generateSwiftFromIR(irDeclarations);
+	return generateSwiftCodeFromIR(irDeclarations);
 }
 
-export function generateKotlinCode(_typescriptCode: string): string {
-	return "";
+export function generateKotlinCode(typescriptCode: string): string {
+	const declarations = getDeclarations(typescriptCode);
+	const irDeclarations = buildIntermediateRepresentation(declarations);
+	return generateKotlinCodeFromIR(irDeclarations);
 }
 
 export default {

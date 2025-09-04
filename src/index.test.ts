@@ -637,7 +637,7 @@ describe("Swift Record Generation", () => {
 	});
 });
 
-describe.todo("Kotlin Record Generation", () => {
+describe("Kotlin Record Generation", () => {
 	const testData = createTestData();
 
 	describe("Primitive types", () => {
@@ -676,6 +676,19 @@ describe.todo("Kotlin Record Generation", () => {
 
 			    @Field
 			    val optionalIsActive: Boolean? = null
+			  }"
+			`);
+		});
+
+		it("should handle any type", () => {
+			const result = generateKotlinCode(testData.anyType);
+			expect(result).toMatchInlineSnapshot(`
+			  "class AnyTypeRecord : Record {
+			    @Field
+			    val genericData: Any = mapOf()
+
+			    @Field
+			    val optionalGenericData: Any? = null
 			  }"
 			`);
 		});
@@ -755,19 +768,157 @@ describe.todo("Kotlin Record Generation", () => {
 			const result = generateKotlinCode(testData.enumType);
 			expect(result).toMatchInlineSnapshot(`
 			  "enum class Status(val value: String) : Enumerable {
-			    PENDING("pending"),
-			    ACTIVE("active")
+			    pending("pending"),
+			    active("active")
+			  }"
+			`);
+		});
+
+		it("should handle numeric enum", () => {
+			const result = generateKotlinCode(testData.numericEnumType);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum class Direction(val value: Int) : Enumerable {
+			    UP(0),
+			    DOWN(1)
+			  }
+
+			  enum class Status(val value: Int) : Enumerable {
+			    pending(1),
+			    active(2)
+			  }"
+			`);
+		});
+
+		it("should handle string enum within record", () => {
+			const result = generateKotlinCode(testData.nestedStringEnum);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum class Status(val value: String) : Enumerable {
+			    pending("PENDING"),
+			    active("ACTIVE")
 			  }
 
 			  class EnumRecord : Record {
 			    @Field
-			    val status: Status = Status.PENDING
+			    val status: Status = Status.pending
 
 			    @Field
 			    val priority: Status? = null
 			  }"
 			`);
 		});
+
+		it("should handle numeric enum within record", () => {
+			const result = generateKotlinCode(testData.nestedNumericEnum);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum class Direction(val value: Int) : Enumerable {
+			    UP(0),
+			    DOWN(1)
+			  }
+
+			  class EnumRecord : Record {
+			    @Field
+			    val direction: Direction = Direction.UP
+
+			    @Field
+			    val optionalDirection: Direction? = null
+			  }"
+			`);
+		});
+	});
+
+	describe("Union types", () => {
+		it("should treat null/undefined unions as optional of base type", () => {
+			const result = generateKotlinCode(testData.optionalUnion);
+			expect(result).toMatchInlineSnapshot(`
+			  "class OptionalUnionRecord : Record {
+			    @Field
+			    val description: String? = null
+
+			    @Field
+			    val maybeCount: Double? = null
+			  }"
+			`);
+		});
+
+		it("should create enum from string literal union alias", () => {
+			const result = generateKotlinCode(testData.unionAliasString);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum class Status(val value: String) : Enumerable {
+			    pending("pending"),
+			    active("active")
+			  }
+
+			  class AliasUnionRecord : Record {
+			    @Field
+			    val status: Status = Status.pending
+
+			    @Field
+			    val optionalStatus: Status? = null
+			  }"
+			`);
+		});
+
+		it("should create enum from numeric literal union alias", () => {
+			const result = generateKotlinCode(testData.unionAliasNumeric);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum class Level(val value: Int) : Enumerable {
+			    _1(1),
+			    _2(2),
+			    _3(3)
+			  }
+
+			  class PriorityRecord : Record {
+			    @Field
+			    val level: Level = Level._1
+
+			    @Field
+			    val optionalLevel: Level? = null
+			  }"
+			`);
+		});
+
+		it.todo(
+			"should synthesize enum from string literal union and handle optional",
+			() => {
+				const result = generateKotlinCode(testData.literalStringUnion);
+				expect(result).toMatchInlineSnapshot(`
+			  "enum class Pending_Active_Union(val value: String) : Enumerable {
+			    pending("pending"),
+			    active("active")
+			  }
+
+			  class InlineUnionRecord : Record {
+			    @Field
+			    val status: Pending_Active_Union = Pending_Active_Union.pending
+
+			    @Field
+			    val optionalStatus: Pending_Active_Union? = null
+			  }"
+			`);
+			},
+		);
+
+		it.todo(
+			"should handle numeric literal unions with content-based naming",
+			() => {
+				const result = generateKotlinCode(testData.numericLiteralUnion);
+				expect(result).toMatchInlineSnapshot(`
+			  "enum class 1_2_3_NumericUnion(val value: Int) : Enumerable {
+			    _1(1),
+			    _2(2),
+			    _3(3)
+			  }
+
+			  class PriorityRecord : Record {
+			    @Field
+			    val level: 1_2_3_NumericUnion = 1_2_3_NumericUnion._1
+
+			    @Field
+			    val optionalLevel: 1_2_3_NumericUnion? = null
+			  }"
+			`);
+			},
+		);
 	});
 
 	describe("Binary data handling", () => {
@@ -841,6 +992,50 @@ describe.todo("Kotlin Record Generation", () => {
 			  "class EmptyRecord : Record {
 			  }"
 			`);
+		});
+
+		it("should throw error for unsupported types", () => {
+			expect(() => generateKotlinCode(testData.unsupportedType)).toThrow(
+				"Unsupported TypeScript type: never",
+			);
+		});
+
+		it("should reorder declarations when interface references another defined later", () => {
+			const result = generateKotlinCode(testData.sortingDeclarations);
+			expect(result).toMatchInlineSnapshot(`
+			  "enum class Status(val value: String) : Enumerable {
+			    ACTIVE("active"),
+			    INACTIVE("inactive")
+			  }
+
+			  class UserProfile : Record {
+			    @Field
+			    val email: String = ""
+
+			    @Field
+			    val age: Double = 0.0
+			  }
+
+			  class User : Record {
+			    @Field
+			    val profile: UserProfile = UserProfile()
+
+			    @Field
+			    val status: Status = Status.ACTIVE
+			  }"
+			`);
+		});
+
+		it("should detect circular dependencies", () => {
+			expect(() => generateKotlinCode(testData.circularDependency)).toThrow(
+				"Circular dependency detected involving A",
+			);
+		});
+
+		it("should throw error for duplicate declarations", () => {
+			expect(() => generateKotlinCode(testData.duplicateDeclarations)).toThrow(
+				"Duplicate declaration found: User",
+			);
 		});
 	});
 });

@@ -5,42 +5,42 @@ import type {
 	IntermediateType,
 } from "./types";
 
-interface SwiftType {
+interface KotlinType {
 	type: string;
 	defaultValue: string;
 }
 
-function mapIntermediateTypeToSwift(
+function mapIntermediateTypeToKotlin(
 	type: IntermediateType,
 	declarations: IntermediateDeclaration[],
-): SwiftType {
+): KotlinType {
 	switch (type.kind) {
 		case "string":
 			return { type: "String", defaultValue: '""' };
 		case "number":
 			return { type: "Double", defaultValue: "0.0" };
 		case "boolean":
-			return { type: "Bool", defaultValue: "false" };
+			return { type: "Boolean", defaultValue: "false" };
 		case "any":
-			return { type: "Any", defaultValue: "[:]" };
+			return { type: "Any", defaultValue: "mapOf()" };
 		case "byte-array":
-			return { type: "Data", defaultValue: "Data()" };
+			return { type: "ByteArray", defaultValue: "ByteArray(0)" };
 		case "array": {
-			const elementSwift = mapIntermediateTypeToSwift(
+			const elementKotlin = mapIntermediateTypeToKotlin(
 				type.elementType,
 				declarations,
 			);
-			return { type: `[${elementSwift.type}]`, defaultValue: "[]" };
+			return { type: `List<${elementKotlin.type}>`, defaultValue: "listOf()" };
 		}
 		case "map": {
-			const valueSwift = mapIntermediateTypeToSwift(
+			const valueKotlin = mapIntermediateTypeToKotlin(
 				type.valueType,
 				declarations,
 			);
-			const keySwift = mapIntermediateTypeToSwift(type.keyType, declarations);
+			const keyKotlin = mapIntermediateTypeToKotlin(type.keyType, declarations);
 			return {
-				type: `[${keySwift.type}: ${valueSwift.type}]`,
-				defaultValue: "[:]",
+				type: `Map<${keyKotlin.type}, ${valueKotlin.type}>`,
+				defaultValue: "mapOf()",
 			};
 		}
 		case "enum": {
@@ -63,7 +63,7 @@ function mapIntermediateTypeToSwift(
 	}
 }
 
-function generateSwiftEnumFromIR(
+function generateKotlinEnumFromIR(
 	enumDecl: IntermediateEnumDeclaration,
 ): string {
 	if (enumDecl.kind !== "enum") {
@@ -74,24 +74,24 @@ function generateSwiftEnumFromIR(
 	const members = enumDecl.members;
 
 	const hasStringInitializer = members.some((m) => typeof m.value === "string");
-	const swiftType = hasStringInitializer ? "String" : "Int";
+	const kotlinType = hasStringInitializer ? "String" : "Int";
 
 	const cases = members
 		.map((member) => {
 			const name = member.name;
-			if (swiftType === "Int") {
+			if (kotlinType === "Int") {
 				const value = member.value;
-				// Numeric type enums are prefixed with an underscores due to Swift naming limitations.
+				// Numeric type enums are prefixed with an underscores due to Kotlin naming limitations.
 				const caseName = name === value.toString() ? `_${name}` : name;
-				return `  case ${caseName} = ${value}`;
+				return `  ${caseName}(${value})`;
 			} else {
 				const value = member.value;
-				return `  case ${name} = "${value}"`;
+				return `  ${name}("${value}")`;
 			}
 		})
-		.join("\n");
+		.join(",\n");
 
-	return `enum ${enumName}: ${swiftType}, Enumerable {\n${cases}\n}`;
+	return `enum class ${enumName}(val value: ${kotlinType}) : Enumerable {\n${cases}\n}`;
 }
 
 // The enum default value is the first member's value.
@@ -106,7 +106,7 @@ function getEnumDefaultValue(enumDecl: IntermediateEnumDeclaration): string {
 	}
 
 	// Check if this is a numeric type alias union (name matches value) vs regular enum
-	// Numeric type alias unions are prefixed with an underscores due to Swift naming limitations.
+	// Numeric type alias unions are prefixed with an underscores due to Kotlin naming limitations.
 	const isNumericTypeAliasUnion =
 		typeof firstMember.value === "number" &&
 		firstMember.name === firstMember.value.toString();
@@ -115,10 +115,10 @@ function getEnumDefaultValue(enumDecl: IntermediateEnumDeclaration): string {
 		? `_${firstMember.name}`
 		: firstMember.name;
 
-	return `.${caseName}`;
+	return `${enumDecl.name}.${caseName}`;
 }
 
-function generateSwiftRecordFromIR(
+function generateKotlinRecordFromIR(
 	recordDecl: IntermediateRecordDeclaration,
 	allDeclarations: IntermediateDeclaration[],
 ): string {
@@ -126,11 +126,11 @@ function generateSwiftRecordFromIR(
 		throw new Error("Expected interface declaration");
 	}
 
-	const interfaceName = recordDecl.name;
+	const className = recordDecl.name;
 	const properties = recordDecl.properties;
 
 	if (properties.length === 0) {
-		return `public struct ${recordDecl.name}: Record {}`;
+		return `class ${recordDecl.name} : Record {\n}`;
 	}
 
 	const propertyFields = properties
@@ -138,46 +138,46 @@ function generateSwiftRecordFromIR(
 			const propertyName = property.name;
 			const isOptional = property.isOptional;
 
-			const swiftType = mapIntermediateTypeToSwift(
+			const kotlinType = mapIntermediateTypeToKotlin(
 				property.type,
 				allDeclarations,
 			);
-			const finalSwiftType = isOptional ? `${swiftType.type}?` : swiftType.type;
-			const finalDefaultValue = isOptional ? "nil" : swiftType.defaultValue;
+			const finalKotlinType = isOptional
+				? `${kotlinType.type}?`
+				: kotlinType.type;
+			const finalDefaultValue = isOptional ? "null" : kotlinType.defaultValue;
 
 			return `  @Field
-  var ${propertyName}: ${finalSwiftType} = ${finalDefaultValue}`;
+  val ${propertyName}: ${finalKotlinType} = ${finalDefaultValue}`;
 		})
 		.join("\n\n");
 
-	return `public struct ${interfaceName}: Record {
+	return `class ${className} : Record {
 ${propertyFields}
 }`;
 }
 
-export function generateSwiftCodeFromIR(
+export function generateKotlinCodeFromIR(
 	irDeclarations: IntermediateDeclaration[],
 ): string {
-	const swiftEnums = irDeclarations
+	const kotlinEnums = irDeclarations
 		.filter((decl) => decl.kind === "enum")
-		.map(generateSwiftEnumFromIR)
+		.map(generateKotlinEnumFromIR)
 		.join("\n\n");
 
-	const swiftRecords = irDeclarations
+	const kotlinRecords = irDeclarations
 		.filter((decl) => decl.kind === "record")
-		.map((decl) => generateSwiftRecordFromIR(decl, irDeclarations))
+		.map((decl) => generateKotlinRecordFromIR(decl, irDeclarations))
 		.join("\n\n");
 
-	const swiftCode = [swiftEnums, swiftRecords]
+	const kotlinCode = [kotlinEnums, kotlinRecords]
 		.filter((s) => Boolean(s))
 		.join("\n\n");
 
-	// If there's no Swift code to generate, return empty string
-	if (!swiftCode) {
+	// If there's no Kotlin code to generate, return empty string
+	if (!kotlinCode) {
 		return "";
 	}
 
-	return `import ExpoModulesCore
-
-${swiftCode}`;
+	return kotlinCode;
 }
