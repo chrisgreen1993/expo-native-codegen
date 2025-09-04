@@ -431,6 +431,34 @@ describe("Kotlin Code Generation", () => {
 		});
 	});
 
+	describe("Object type alias", () => {
+		it("should treat object type alias like interface", () => {
+			const config = { kotlin: { packageName: "expo.modules.testmodule" } };
+			const result = generateKotlinCode(testData.objectTypeAlias, config);
+			expect(result).toMatchInlineSnapshot(`
+			  "package expo.modules.testmodule
+
+			  import expo.modules.kotlin.*
+
+			  class UserProfile : Record {
+			    @Field
+			    val email: String = ""
+
+			    @Field
+			    val age: Double = 0.0
+			  }
+
+			  class User : Record {
+			    @Field
+			    val profile: UserProfile = UserProfile()
+
+			    @Field
+			    val optionalProfile: UserProfile? = null
+			  }"
+			`);
+		});
+	});
+
 	describe("Edge cases", () => {
 		it("should handle empty TypeScript code", () => {
 			const result = generateKotlinCode("", config);

@@ -136,6 +136,16 @@ export interface NestedArrayRecord {
   addresses: Address[];
   optionalAddresses?: Address[];
 }`,
+		objectTypeAlias: `
+export type UserProfile = {
+	email: string;
+	age: number;
+}
+
+export type User = {
+	profile: UserProfile;
+	optionalProfile?: UserProfile;
+}`,
 		binaryDataRecord: `
 export interface BinaryDataRecord {
   data: Uint8Array;

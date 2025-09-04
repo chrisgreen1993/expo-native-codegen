@@ -2,6 +2,7 @@ import {
 	type EnumDeclaration,
 	type InterfaceDeclaration,
 	Node,
+	type PropertySignature,
 	type Type,
 	type TypeAliasDeclaration,
 } from "ts-morph";
@@ -10,7 +11,6 @@ import type {
 	IntermediateEnumDeclaration,
 	IntermediateRecordDeclaration,
 	IntermediateType,
-	RecordProperty,
 	TSDeclaration,
 } from "./types";
 
@@ -57,6 +57,14 @@ function resolveType(type: Type): IntermediateType {
 		return { kind: "record", name: typeName };
 	} else if (type.isEnum()) {
 		return { kind: "enum", name: typeName };
+	} else if (type.isObject()) {
+		// Check if the object is a type alias (e.g. type User = { ... })
+		const aliasName = type.getAliasSymbol()?.getName();
+		if (aliasName) {
+			return { kind: "record", name: aliasName };
+		}
+		// If no alias name, it's an inline object and we don't support
+		throw new Error(`Object type ${typeName} is not a named type alias`);
 	} else if (type.isUnion()) {
 		// Check if the union is a named alias (e.g. type Status = "a" | "b")
 		const aliasName = type.getAliasSymbol()?.getName();
@@ -85,28 +93,30 @@ function resolveEnumDeclaration(
 	};
 }
 
+// Converts a TS property signature from an interface or object type alias
+function propertySignativeToRecordProperty(property: PropertySignature) {
+	const propertyName = property.getName();
+	const propertyType = property.getType();
+	const isOptional = property.hasQuestionToken() || propertyType.isNullable();
+
+	// Get the non-nullable type (e.g. T | undefined -> T)
+	// This allows us to handle the mapping without having to handle nullables ourselves
+	const nonNullableType = propertyType.getNonNullableType();
+	const resolvedType = resolveType(nonNullableType);
+
+	return {
+		name: propertyName,
+		type: resolvedType,
+		isOptional,
+	};
+}
+
 function resolveInterfaceDeclaration(
 	interfaceDecl: InterfaceDeclaration,
 ): IntermediateRecordDeclaration {
-	const properties: RecordProperty[] = interfaceDecl
+	const properties = interfaceDecl
 		.getProperties()
-		.map((property) => {
-			const propertyName = property.getName();
-			const propertyType = property.getType();
-			const isOptional =
-				property.hasQuestionToken() || propertyType.isNullable();
-
-			// Get the non-nullable type (e.g. T | undefined -> T)
-			// This allows us to handle the mapping without having to handle nullables ourselves
-			const nonNullableType = propertyType.getNonNullableType();
-			const resolvedType = resolveType(nonNullableType);
-
-			return {
-				name: propertyName,
-				type: resolvedType,
-				isOptional,
-			};
-		});
+		.map(propertySignativeToRecordProperty);
 
 	return {
 		kind: "record",
@@ -117,38 +127,48 @@ function resolveInterfaceDeclaration(
 
 function resolveTypeAliasDeclaration(
 	aliasDecl: TypeAliasDeclaration,
-): IntermediateEnumDeclaration {
-	const targetType = aliasDecl.getType();
+): IntermediateDeclaration {
+	const typeNode = aliasDecl.getTypeNode();
+	if (Node.isTypeLiteral(typeNode)) {
+		// The type alias in an object type literal (e.g. type X = { prop: T })
+		const properties = typeNode
+			.getMembers()
+			.filter(Node.isPropertySignature)
+			.map(propertySignativeToRecordProperty);
 
-	// Only support type aliases that are unions of literals
-	// These are mapped to enums
-	if (!targetType.isUnion()) {
-		throw new Error(`Type alias ${aliasDecl.getName()} is not a union type`);
-	}
+		return {
+			kind: "record",
+			name: aliasDecl.getName(),
+			properties,
+		};
+	} else if (Node.isUnionTypeNode(typeNode)) {
+		// The type alias is a union of literals (e.g. type X = "a" | "b")
+		const unionTypes = typeNode.getType().getUnionTypes();
 
-	const unionTypes = targetType.getUnionTypes();
-
-	const members = unionTypes.map((t) => {
-		if (t.isStringLiteral() || t.isNumberLiteral()) {
-			const value = t.getLiteralValue();
-			if (typeof value !== "string" && typeof value !== "number") {
-				throw new Error(`Literal value is not a string or number: ${value}`);
+		const members = unionTypes.map((t) => {
+			if (t.isStringLiteral() || t.isNumberLiteral()) {
+				const value = t.getLiteralValue();
+				if (typeof value !== "string" && typeof value !== "number") {
+					throw new Error(`Literal value is not a string or number: ${value}`);
+				}
+				return {
+					name: value.toString(),
+					value: value,
+				};
 			}
-			return {
-				name: value.toString(),
-				value: value,
-			};
-		}
-		throw new Error(
-			`Unsupported literal type in type alias ${aliasDecl.getName()}`,
-		);
-	});
+			throw new Error(
+				`Unsupported literal type in type alias ${aliasDecl.getName()}`,
+			);
+		});
 
-	return {
-		kind: "enum",
-		name: aliasDecl.getName(),
-		members,
-	};
+		return {
+			kind: "enum",
+			name: aliasDecl.getName(),
+			members,
+		};
+	} else {
+		throw new Error(`Unsupported type alias type: ${aliasDecl.getName()}`);
+	}
 }
 
 function resolveDeclaration(decl: TSDeclaration) {

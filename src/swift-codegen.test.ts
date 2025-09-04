@@ -383,6 +383,31 @@ describe("Swift Code Generation", () => {
 		});
 	});
 
+	describe("Object type alias", () => {
+		it("should treat object type alias like interface", () => {
+			const result = generateSwiftCode(testData.objectTypeAlias);
+			expect(result).toMatchInlineSnapshot(`
+			  "import ExpoModulesCore
+
+			  public struct UserProfile: Record {
+			    @Field
+			    var email: String = ""
+
+			    @Field
+			    var age: Double = 0.0
+			  }
+
+			  public struct User: Record {
+			    @Field
+			    var profile: UserProfile = UserProfile()
+
+			    @Field
+			    var optionalProfile: UserProfile? = nil
+			  }"
+			`);
+		});
+	});
+
 	describe("Edge cases", () => {
 		it("should handle empty TypeScript code", () => {
 			const result = generateSwiftCode("");
