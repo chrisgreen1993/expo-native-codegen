@@ -159,27 +159,103 @@ function resolveDeclaration(decl: TSDeclaration) {
 	} else if (Node.isTypeAliasDeclaration(decl)) {
 		return resolveTypeAliasDeclaration(decl);
 	}
+}
 
-	return null;
+// Collect all type references from a declaration to determine dependencies
+function collectDependencies(decl: IntermediateDeclaration) {
+	const dependencies = new Set<string>();
+
+	if (decl.kind === "record") {
+		for (const prop of decl.properties) {
+			collectTypeDependencies(prop.type, dependencies);
+		}
+	}
+	// Enums don't have dependencies on other declarations
+
+	return Array.from(dependencies);
+}
+
+function collectTypeDependencies(
+	type: IntermediateType,
+	dependencies: Set<string>,
+) {
+	switch (type.kind) {
+		case "enum":
+		case "record":
+			dependencies.add(type.name);
+			break;
+		case "array":
+			collectTypeDependencies(type.elementType, dependencies);
+			break;
+		case "map":
+			collectTypeDependencies(type.keyType, dependencies);
+			collectTypeDependencies(type.valueType, dependencies);
+			break;
+		// Primitives don't have dependencies
+		default:
+			break;
+	}
+}
+
+// Topological sort to order declarations by dependencies
+function sortDeclarationsByDependencies(
+	declarations: IntermediateDeclaration[],
+) {
+	const sorted: IntermediateDeclaration[] = [];
+	const visited = new Set<string>();
+	const visiting = new Set<string>();
+
+	const declMap = new Map(declarations.map((d) => [d.name, d]));
+
+	function visit(decl: IntermediateDeclaration) {
+		if (visiting.has(decl.name)) {
+			throw new Error(`Circular dependency detected involving ${decl.name}`);
+		}
+		if (visited.has(decl.name)) {
+			return;
+		}
+
+		visiting.add(decl.name);
+		const dependencies = collectDependencies(decl);
+
+		for (const depName of dependencies) {
+			const depDecl = declMap.get(depName);
+			if (depDecl) {
+				visit(depDecl);
+			}
+		}
+
+		visiting.delete(decl.name);
+		visited.add(decl.name);
+		sorted.push(decl);
+	}
+
+	for (const decl of declarations) {
+		visit(decl);
+	}
+
+	return sorted;
 }
 
 // Build a language-agnostic intermediate representation of the TypeScript declarations.
 // This allows easier mapping to Swift and Kotlin.
 export function buildIntermediateRepresentation(declarations: TSDeclaration[]) {
-	const declarationMap = new Map<string, IntermediateDeclaration>();
-	for (const decl of declarations) {
-		const resolved = resolveDeclaration(decl);
-		if (resolved) {
-			const existing = declarationMap.get(resolved.name);
-			if (!existing) {
-				declarationMap.set(resolved.name, resolved);
-			} else if (existing.kind !== resolved.kind) {
-				throw new Error(
-					`Conflicting kinds for ${resolved.name}: ${existing.kind} vs ${resolved.kind}`,
-				);
-			}
-		}
-	}
+	const seenNames = new Set<string>();
 
-	return Array.from(declarationMap.values());
+	const allDeclarations = declarations.reduce<IntermediateDeclaration[]>(
+		(acc, decl) => {
+			const resolved = resolveDeclaration(decl);
+			if (resolved) {
+				if (seenNames.has(resolved.name)) {
+					throw new Error(`Duplicate declaration found: ${resolved.name}`);
+				}
+				seenNames.add(resolved.name);
+				acc.push(resolved);
+			}
+			return acc;
+		},
+		[],
+	);
+
+	return sortDeclarationsByDependencies(allDeclarations);
 }

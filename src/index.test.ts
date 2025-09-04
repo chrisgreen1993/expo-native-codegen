@@ -147,6 +147,46 @@ export interface BinaryDataRecord {
 		emptyRecord: `
 export interface EmptyRecord {
 }`,
+		sortingDeclarations: `
+export interface User {
+	profile: UserProfile;
+	status: Status;
+}
+
+export interface UserProfile {
+	email: string;
+	age: number;
+}
+
+export enum Status {
+	ACTIVE = "active",
+	INACTIVE = "inactive"
+}`,
+		circularDependency: `
+export interface A {
+	b: B;
+}
+
+export interface B {
+	a: A;
+}`,
+		duplicateDeclarations: `
+export interface User {
+	name: string;
+}
+
+export interface User {
+	name: string;
+}`,
+		namingConflict: `
+export interface Status {
+	value: string;
+}
+
+export enum Status {
+	ACTIVE = "active",
+	INACTIVE = "inactive"
+}`,
 	};
 }
 
@@ -551,6 +591,47 @@ describe("Swift Record Generation", () => {
 		it("should throw error for unsupported types", () => {
 			expect(() => generateSwiftCode(testData.unsupportedType)).toThrow(
 				"Unsupported TypeScript type: never",
+			);
+		});
+
+		it("should reorder declarations when interface references another defined later", () => {
+			const result = generateSwiftCode(testData.sortingDeclarations);
+			expect(result).toMatchInlineSnapshot(`
+				"import ExpoModulesCore
+
+				enum Status: String, Enumerable {
+				  case ACTIVE = "active"
+				  case INACTIVE = "inactive"
+				}
+
+				public struct UserProfile: Record {
+				  @Field
+				  var email: String = ""
+
+				  @Field
+				  var age: Double = 0.0
+				}
+
+				public struct User: Record {
+				  @Field
+				  var profile: UserProfile = UserProfile()
+
+				  @Field
+				  var status: Status = .ACTIVE
+				}"
+			`);
+		});
+
+		it("should detect circular dependencies", () => {
+			expect(() => generateSwiftCode(testData.circularDependency)).toThrow(
+				"Circular dependency detected involving A",
+			);
+		});
+
+		it("should throw error for duplicate declarations", () => {
+			// This might happen if the same interface is declared multiple times
+			expect(() => generateSwiftCode(testData.duplicateDeclarations)).toThrow(
+				"Duplicate declaration found: User",
 			);
 		});
 	});
