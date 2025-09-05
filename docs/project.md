@@ -1,4 +1,4 @@
-# Expo Record CodeGen - Project Goals
+# Expo Native CodeGen - Project Goals
 
 ## Problem Statement
 When creating Expo Native Modules, developers must manually write:

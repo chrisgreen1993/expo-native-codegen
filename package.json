@@ -1,11 +1,11 @@
 {
-  "name": "expo-record-codegen",
+  "name": "expo-native-codegen",
   "version": "0.1.0",
   "description": "A Node.js library with CLI for code generation",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "expo-record-codegen": "./dist/cli.js"
+    "expo-native-codegen": "./dist/cli.js"
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",

@@ -1,6 +1,6 @@
-# Expo Record CodeGen
+# Expo Native CodeGen
 
-A Node.js library and CLI tool for generating Expo Record classes from TypeScript interfaces.
+A Node.js library and CLI tool for generating Expo Native code from TypeScript definitions.
 
 ## Problem
 
@@ -32,7 +32,7 @@ bun run build:all
 ### As a Library
 
 ```typescript
-import { generateSwiftRecords, generateKotlinRecords } from 'expo-record-codegen';
+import { generateSwiftRecords, generateKotlinRecords } from 'expo-native-codegen';
 
 const typescriptCode = `
 export interface GeneratedRecord {
@@ -42,7 +42,7 @@ export interface GeneratedRecord {
 `;
 
 // Generate Swift Records
-const swiftCode = generateSwiftRecords(typescriptCode);
+const swiftCode = generateSwiftCode(typescriptCode);
 console.log(swiftCode);
 // Output:
 // // Generated Swift Records
@@ -56,7 +56,7 @@ console.log(swiftCode);
 // }
 
 // Generate Kotlin Records  
-const kotlinCode = generateKotlinRecords(typescriptCode);
+const kotlinCode = generateKotlinCode(typescriptCode);
 console.log(kotlinCode);
 // Output:
 // // Generated Kotlin Records
