@@ -131,7 +131,7 @@ function generateKotlinRecordFromIR(
 	const properties = recordDecl.properties;
 
 	if (properties.length === 0) {
-		return `class ${recordDecl.name} : Record {\n}`;
+		return `data class ${recordDecl.name} : Record`;
 	}
 
 	const propertyFields = properties
@@ -151,11 +151,9 @@ function generateKotlinRecordFromIR(
 			return `  @Field
   val ${propertyName}: ${finalKotlinType} = ${finalDefaultValue}`;
 		})
-		.join("\n\n");
+		.join(",\n\n");
 
-	return `class ${className} : Record {
-${propertyFields}
-}`;
+	return `data class ${className}(\n${propertyFields}\n) : Record`;
 }
 
 export function generateKotlinCodeFromIR(

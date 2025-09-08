@@ -15,13 +15,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class StringRecord : Record {
+			  data class StringRecord(
 			    @Field
-			    val name: String = ""
+			    val name: String = "",
 
 			    @Field
 			    val optionalName: String? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -32,13 +32,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class NumberRecord : Record {
+			  data class NumberRecord(
 			    @Field
-			    val age: Double = 0.0
+			    val age: Double = 0.0,
 
 			    @Field
 			    val optionalAge: Double? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -49,13 +49,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class BooleanRecord : Record {
+			  data class BooleanRecord(
 			    @Field
-			    val isActive: Boolean = false
+			    val isActive: Boolean = false,
 
 			    @Field
 			    val optionalIsActive: Boolean? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -66,13 +66,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class AnyTypeRecord : Record {
+			  data class AnyTypeRecord(
 			    @Field
-			    val genericData: Any = mapOf()
+			    val genericData: Any = mapOf(),
 
 			    @Field
 			    val optionalGenericData: Any? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 	});
@@ -85,13 +85,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class StringArrayRecord : Record {
+			  data class StringArrayRecord(
 			    @Field
-			    val tags: List<String> = listOf()
+			    val tags: List<String> = listOf(),
 
 			    @Field
 			    val optionalTags: List<String>? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -102,13 +102,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class NumberArrayRecord : Record {
+			  data class NumberArrayRecord(
 			    @Field
-			    val scores: List<Double> = listOf()
+			    val scores: List<Double> = listOf(),
 
 			    @Field
 			    val optionalScores: List<Double>? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -119,13 +119,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class BooleanArrayRecord : Record {
+			  data class BooleanArrayRecord(
 			    @Field
-			    val flags: List<Boolean> = listOf()
+			    val flags: List<Boolean> = listOf(),
 
 			    @Field
 			    val optionalFlags: List<Boolean>? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 	});
@@ -138,13 +138,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class StringMapRecord : Record {
+			  data class StringMapRecord(
 			    @Field
-			    val metadata: Map<String, String> = mapOf()
+			    val metadata: Map<String, String> = mapOf(),
 
 			    @Field
 			    val optionalMetadata: Map<String, String>? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -155,13 +155,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class AnyMapRecord : Record {
+			  data class AnyMapRecord(
 			    @Field
-			    val config: Map<String, Any> = mapOf()
+			    val config: Map<String, Any> = mapOf(),
 
 			    @Field
 			    val optionalConfig: Map<String, Any>? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 	});
@@ -212,13 +212,13 @@ describe("Kotlin Code Generation", () => {
 			    active("ACTIVE")
 			  }
 
-			  class EnumRecord : Record {
+			  data class EnumRecord(
 			    @Field
-			    val status: Status = Status.pending
+			    val status: Status = Status.pending,
 
 			    @Field
 			    val priority: Status? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -234,13 +234,13 @@ describe("Kotlin Code Generation", () => {
 			    DOWN(1)
 			  }
 
-			  class EnumRecord : Record {
+			  data class EnumRecord(
 			    @Field
-			    val direction: Direction = Direction.UP
+			    val direction: Direction = Direction.UP,
 
 			    @Field
 			    val optionalDirection: Direction? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 	});
@@ -253,13 +253,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class OptionalUnionRecord : Record {
+			  data class OptionalUnionRecord(
 			    @Field
-			    val description: String? = null
+			    val description: String? = null,
 
 			    @Field
 			    val maybeCount: Double? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -275,13 +275,13 @@ describe("Kotlin Code Generation", () => {
 			    active("active")
 			  }
 
-			  class AliasUnionRecord : Record {
+			  data class AliasUnionRecord(
 			    @Field
-			    val status: Status = Status.pending
+			    val status: Status = Status.pending,
 
 			    @Field
 			    val optionalStatus: Status? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -298,13 +298,13 @@ describe("Kotlin Code Generation", () => {
 			    _3(3)
 			  }
 
-			  class PriorityRecord : Record {
+			  data class PriorityRecord(
 			    @Field
-			    val level: Level = Level._1
+			    val level: Level = Level._1,
 
 			    @Field
 			    val optionalLevel: Level? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -322,13 +322,13 @@ describe("Kotlin Code Generation", () => {
 			    active("active")
 			  }
 
-			  class InlineUnionRecord : Record {
+			  data class InlineUnionRecord(
 			    @Field
-			    val status: Pending_Active_Union = Pending_Active_Union.pending
+			    val status: Pending_Active_Union = Pending_Active_Union.pending,
 
 			    @Field
 			    val optionalStatus: Pending_Active_Union? = null
-			  }"
+			  ) : Record"
 			`);
 			},
 		);
@@ -348,13 +348,13 @@ describe("Kotlin Code Generation", () => {
 			    _3(3)
 			  }
 
-			  class PriorityRecord : Record {
+			  data class PriorityRecord(
 			    @Field
-			    val level: 1_2_3_NumericUnion = 1_2_3_NumericUnion._1
+			    val level: 1_2_3_NumericUnion = 1_2_3_NumericUnion._1,
 
 			    @Field
 			    val optionalLevel: 1_2_3_NumericUnion? = null
-			  }"
+			  ) : Record"
 			`);
 			},
 		);
@@ -368,13 +368,13 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class BinaryDataRecord : Record {
+			  data class BinaryDataRecord(
 			    @Field
-			    val data: ByteArray = ByteArray(0)
+			    val data: ByteArray = ByteArray(0),
 
 			    @Field
 			    val optionalData: ByteArray? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 	});
@@ -387,21 +387,21 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class Address : Record {
+			  data class Address(
 			    @Field
-			    val street: String = ""
+			    val street: String = "",
 
 			    @Field
 			    val city: String = ""
-			  }
+			  ) : Record
 
-			  class NestedRecord : Record {
+			  data class NestedRecord(
 			    @Field
-			    val address: Address = Address()
+			    val address: Address = Address(),
 
 			    @Field
 			    val billingAddress: Address? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 
@@ -412,21 +412,21 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class Address : Record {
+			  data class Address(
 			    @Field
-			    val street: String = ""
+			    val street: String = "",
 
 			    @Field
 			    val city: String = ""
-			  }
+			  ) : Record
 
-			  class NestedArrayRecord : Record {
+			  data class NestedArrayRecord(
 			    @Field
-			    val addresses: List<Address> = listOf()
+			    val addresses: List<Address> = listOf(),
 
 			    @Field
 			    val optionalAddresses: List<Address>? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 	});
@@ -440,21 +440,21 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class UserProfile : Record {
+			  data class UserProfile(
 			    @Field
-			    val email: String = ""
+			    val email: String = "",
 
 			    @Field
 			    val age: Double = 0.0
-			  }
+			  ) : Record
 
-			  class User : Record {
+			  data class User(
 			    @Field
-			    val profile: UserProfile = UserProfile()
+			    val profile: UserProfile = UserProfile(),
 
 			    @Field
 			    val optionalProfile: UserProfile? = null
-			  }"
+			  ) : Record"
 			`);
 		});
 	});
@@ -472,8 +472,7 @@ describe("Kotlin Code Generation", () => {
 
 			  import expo.modules.kotlin.*
 
-			  class EmptyRecord : Record {
-			  }"
+			  data class EmptyRecord : Record"
 			`);
 		});
 
@@ -495,21 +494,21 @@ describe("Kotlin Code Generation", () => {
 			    INACTIVE("inactive")
 			  }
 
-			  class UserProfile : Record {
+			  data class UserProfile(
 			    @Field
-			    val email: String = ""
+			    val email: String = "",
 
 			    @Field
 			    val age: Double = 0.0
-			  }
+			  ) : Record
 
-			  class User : Record {
+			  data class User(
 			    @Field
-			    val profile: UserProfile = UserProfile()
+			    val profile: UserProfile = UserProfile(),
 
 			    @Field
 			    val status: Status = Status.ACTIVE
-			  }"
+			  ) : Record"
 			`);
 		});
 
