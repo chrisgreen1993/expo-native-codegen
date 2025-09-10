@@ -29,52 +29,58 @@ bun run build:all
 
 ## Usage
 
-### As a Library
+### CLI
 
-```typescript
-import { generateSwiftRecords, generateKotlinRecords } from 'expo-native-codegen';
-
-const typescriptCode = `
-export interface GeneratedRecord {
-  propertyName: string;
-  optionalProperty?: string;
-}
-`;
-
-// Generate Swift Records
-const swiftCode = generateSwiftCode(typescriptCode);
-console.log(swiftCode);
-// Output:
-// // Generated Swift Records
-// // TODO: Parse TypeScript interfaces and generate Swift Records
-// public struct GeneratedRecord: Record {
-//   @Field
-//   var propertyName: String = "default"
-//   
-//   @Field
-//   var optionalProperty: String? = nil
-// }
-
-// Generate Kotlin Records  
-const kotlinCode = generateKotlinCode(typescriptCode);
-console.log(kotlinCode);
-// Output:
-// // Generated Kotlin Records
-// // TODO: Parse TypeScript interfaces and generate Kotlin Records
-// class GeneratedRecord : Record {
-//   @Field
-//   val propertyName: String = "default"
-//   
-//   @Field
-//   val optionalProperty: String? = null
-// }
+Build the CLI:
+```bash
+bun run build:cli
 ```
 
-### As a CLI
-
+Run:
 ```bash
-# Print hello world
-bun run dist/cli.js
+node dist/cli.js \
+  --input path/to/types.ts \
+  --output ./generated \
+  --config codegen.json
+
+# Short flags
+node dist/cli.js -i path/to/types.ts -o ./generated -c codegen.json
+
+# Specify languages (default: kotlin, swift)
+node dist/cli.js -i path/to/types.ts -o ./generated -c codegen.json -l kotlin
+node dist/cli.js -i path/to/types.ts -o ./generated -c codegen.json -l swift
+```
+
+Outputs:
+- Kotlin: `generated/kotlin/<PascalCaseOfInput>.kt`
+- Swift: `generated/swift/<PascalCaseOfInput>.swift`
+
+Config (`codegen.json`):
+```json
+{
+  "kotlin": {
+    "packageName": "expo.modules.mymodule"
+  }
+}
+```
+
+Input example (`types.ts`):
+```ts
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+```
+
+### Library
+
+```ts
+import { generateSwiftCode, generateKotlinCode } from "expo-native-codegen";
+
+const ts = `export interface ValidationResult { isValid: boolean; errors: string[] }`;
+
+const swift = generateSwiftCode(ts);
+const kotlin = generateKotlinCode(ts, { kotlin: { packageName: "expo.modules.mymodule" } });
 ```
 
 ## Development
@@ -89,12 +95,3 @@ bun run dev
 # Build library and CLI
 bun run build:all
 ```
-
-## Project Structure
-
-```
-src/
-├── index.ts          # Library entry point
-├── cli.ts           # CLI entry point
-└── index.test.ts    # Tests
-``` 
