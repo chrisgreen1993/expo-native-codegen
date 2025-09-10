@@ -13,7 +13,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class StringRecord(
 			    @Field
@@ -30,7 +31,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class NumberRecord(
 			    @Field
@@ -47,7 +49,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class BooleanRecord(
 			    @Field
@@ -64,7 +67,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class AnyTypeRecord(
 			    @Field
@@ -83,7 +87,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class StringArrayRecord(
 			    @Field
@@ -100,7 +105,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class NumberArrayRecord(
 			    @Field
@@ -117,7 +123,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class BooleanArrayRecord(
 			    @Field
@@ -136,7 +143,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class StringMapRecord(
 			    @Field
@@ -153,7 +161,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class AnyMapRecord(
 			    @Field
@@ -172,7 +181,7 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Status(val value: String) : Enumerable {
 			    pending("pending"),
@@ -186,7 +195,7 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Direction(val value: Int) : Enumerable {
 			    UP(0),
@@ -205,7 +214,9 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Status(val value: String) : Enumerable {
 			    pending("PENDING"),
@@ -227,7 +238,9 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Direction(val value: Int) : Enumerable {
 			    UP(0),
@@ -251,7 +264,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class OptionalUnionRecord(
 			    @Field
@@ -268,7 +282,9 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Status(val value: String) : Enumerable {
 			    pending("pending"),
@@ -290,7 +306,9 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Level(val value: Int) : Enumerable {
 			    _1(1),
@@ -315,7 +333,9 @@ describe("Kotlin Code Generation", () => {
 				expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Pending_Active_Union(val value: String) : Enumerable {
 			    pending("pending"),
@@ -340,7 +360,9 @@ describe("Kotlin Code Generation", () => {
 				expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class 1_2_3_NumericUnion(val value: Int) : Enumerable {
 			    _1(1),
@@ -366,7 +388,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class BinaryDataRecord(
 			    @Field
@@ -385,7 +408,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class Address(
 			    @Field
@@ -410,7 +434,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class Address(
 			    @Field
@@ -438,7 +463,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class UserProfile(
 			    @Field
@@ -470,7 +496,8 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
 
 			  data class EmptyRecord : Record"
 			`);
@@ -487,7 +514,9 @@ describe("Kotlin Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "package expo.modules.testmodule
 
-			  import expo.modules.kotlin.*
+			  import expo.modules.kotlin.records.Record
+			  import expo.modules.kotlin.records.Field
+			  import expo.modules.kotlin.types.Enumerable
 
 			  enum class Status(val value: String) : Enumerable {
 			    ACTIVE("active"),

@@ -179,9 +179,18 @@ export function generateKotlinCodeFromIR(
 		return "";
 	}
 
+	const imports: string[] = [];
+	if (kotlinRecords) {
+		imports.push("import expo.modules.kotlin.records.Record");
+		imports.push("import expo.modules.kotlin.records.Field");
+	}
+	if (kotlinEnums) {
+		imports.push("import expo.modules.kotlin.types.Enumerable");
+	}
+
 	return `package ${config.packageName}
 
-import expo.modules.kotlin.*
+${imports.join("\n")}
 
 ${kotlinCode}`;
 }

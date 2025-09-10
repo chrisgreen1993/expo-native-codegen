@@ -12,7 +12,8 @@ const TEST_DIR = path.join(
 
 const EXPECTED_KOTLIN_VALIDATION_RESULT = `package expo.modules.test
 
-import expo.modules.kotlin.*
+import expo.modules.kotlin.records.Record
+import expo.modules.kotlin.records.Field
 
 data class ValidationResult(
   @Field
