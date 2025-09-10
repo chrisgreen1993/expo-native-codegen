@@ -37,6 +37,8 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "ts-morph": "^26.0.0"
+    "@types/yargs": "^17.0.33",
+    "ts-morph": "^26.0.0",
+    "yargs": "^18.0.0"
   }
 }
