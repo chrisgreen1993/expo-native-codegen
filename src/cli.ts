@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
 import fs from "node:fs/promises";
 import path from "node:path";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import { generateKotlinCode, generateSwiftCode } from "./index";
 import type { CodegenConfig } from "./types";
 
