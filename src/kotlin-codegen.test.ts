@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
+import { createCodegenFixtures } from "../fixtures/index";
 import { generateKotlinCode } from "./index";
-import { createTestData } from "./test-fixtures";
 
 describe("Kotlin Code Generation", () => {
-	const testData = createTestData();
+	const testData = createCodegenFixtures();
 
 	const config = { kotlin: { packageName: "expo.modules.testmodule" } };
 

@@ -38,6 +38,7 @@ bun run build:cli
 
 Run:
 ```bash
+# TypeScript file (automatically bundles dependencies)
 node dist/cli.js \
   --input path/to/types.ts \
   --output ./generated \

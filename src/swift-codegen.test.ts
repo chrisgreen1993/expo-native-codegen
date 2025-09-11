@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
+import { createCodegenFixtures } from "../fixtures/index";
 import { generateSwiftCode } from "./index";
-import { createTestData } from "./test-fixtures";
 
 describe("Swift Code Generation", () => {
-	const testData = createTestData();
+	const testData = createCodegenFixtures();
 
 	describe("Primitive types", () => {
 		it("should handle string type", () => {

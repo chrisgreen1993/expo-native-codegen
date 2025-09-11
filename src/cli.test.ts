@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { getUserExamplePath } from "../fixtures/index";
 import { generateCode } from "./cli";
 
 const TEST_DIR = path.join(
@@ -10,28 +11,16 @@ const TEST_DIR = path.join(
 	"test-output",
 );
 
-const EXPECTED_KOTLIN_VALIDATION_RESULT = `package expo.modules.test
+const FIXTURES_DIR = getUserExamplePath();
 
-import expo.modules.kotlin.records.Record
-import expo.modules.kotlin.records.Field
-
-data class ValidationResult(
-  @Field
-  val isValid: Boolean = false,
-
-  @Field
-  val errors: List<String> = listOf()
-) : Record`;
-
-const EXPECTED_SWIFT_VALIDATION_RESULT = `import ExpoModulesCore
-
-public struct ValidationResult: Record {
-  @Field
-  var isValid: Bool = false
-
-  @Field
-  var errors: [String] = []
-}`;
+const EXPECTED_KOTLIN_RESULT = await fs.readFile(
+	path.join(FIXTURES_DIR, "expected", "expected-kotlin.kt"),
+	"utf-8",
+);
+const EXPECTED_SWIFT_RESULT = await fs.readFile(
+	path.join(FIXTURES_DIR, "expected", "expected-swift.swift"),
+	"utf-8",
+);
 
 async function doesFileExist(path: string) {
 	try {
@@ -50,19 +39,10 @@ describe("CLI", () => {
 		// Create test directory
 		await fs.mkdir(TEST_DIR, { recursive: true });
 
-		// Create test files
-		const tsContent = `export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}`;
-		const configContent = JSON.stringify({
-			kotlin: {
-				packageName: "expo.modules.test",
-			},
+		// Copy fixtures to test directory
+		await fs.cp(path.join(FIXTURES_DIR, "src"), path.join(TEST_DIR, "src"), {
+			recursive: true,
 		});
-
-		await fs.writeFile(path.join(TEST_DIR, "validation-result.ts"), tsContent);
-		await fs.writeFile(path.join(TEST_DIR, "config.json"), configContent);
 	});
 
 	afterEach(async () => {
@@ -75,30 +55,30 @@ describe("CLI", () => {
 
 	it("should generate both Kotlin and Swift code by default", async () => {
 		await generateCode({
-			inputPath: path.join(TEST_DIR, "validation-result.ts"),
+			inputPath: path.join(TEST_DIR, "src", "results.ts"),
 			outputPath: path.join(TEST_DIR, "output"),
-			configPath: path.join(TEST_DIR, "config.json"),
+			configPath: path.join(TEST_DIR, "src", "config.json"),
 		});
 
 		const kotlinContent = await fs.readFile(
-			path.join(TEST_DIR, "output", "kotlin", "ValidationResult.kt"),
+			path.join(TEST_DIR, "output", "kotlin", "Results.kt"),
 			"utf-8",
 		);
 
-		expect(kotlinContent).toBe(EXPECTED_KOTLIN_VALIDATION_RESULT);
+		expect(kotlinContent).toBe(EXPECTED_KOTLIN_RESULT);
 
 		const swiftContent = await fs.readFile(
-			path.join(TEST_DIR, "output", "swift", "ValidationResult.swift"),
+			path.join(TEST_DIR, "output", "swift", "Results.swift"),
 			"utf-8",
 		);
-		expect(swiftContent).toBe(EXPECTED_SWIFT_VALIDATION_RESULT);
+		expect(swiftContent).toBe(EXPECTED_SWIFT_RESULT);
 	});
 
 	it("should generate only Kotlin code when specified", async () => {
 		await generateCode({
-			inputPath: path.join(TEST_DIR, "validation-result.ts"),
+			inputPath: path.join(TEST_DIR, "src", "results.ts"),
 			outputPath: path.join(TEST_DIR, "output"),
-			configPath: path.join(TEST_DIR, "config.json"),
+			configPath: path.join(TEST_DIR, "src", "config.json"),
 			languages: ["kotlin"],
 		});
 
@@ -107,17 +87,17 @@ describe("CLI", () => {
 		);
 
 		const kotlinContent = await fs.readFile(
-			path.join(TEST_DIR, "output", "kotlin", "ValidationResult.kt"),
+			path.join(TEST_DIR, "output", "kotlin", "Results.kt"),
 			"utf-8",
 		);
-		expect(kotlinContent).toBe(EXPECTED_KOTLIN_VALIDATION_RESULT);
+		expect(kotlinContent).toBe(EXPECTED_KOTLIN_RESULT);
 	});
 
 	it("should generate only Swift code when specified", async () => {
 		await generateCode({
-			inputPath: path.join(TEST_DIR, "validation-result.ts"),
+			inputPath: path.join(TEST_DIR, "src", "results.ts"),
 			outputPath: path.join(TEST_DIR, "output"),
-			configPath: path.join(TEST_DIR, "config.json"),
+			configPath: path.join(TEST_DIR, "src", "config.json"),
 			languages: ["swift"],
 		});
 
@@ -126,10 +106,10 @@ describe("CLI", () => {
 		);
 
 		const swiftContent = await fs.readFile(
-			path.join(TEST_DIR, "output", "swift", "ValidationResult.swift"),
+			path.join(TEST_DIR, "output", "swift", "Results.swift"),
 			"utf-8",
 		);
-		expect(swiftContent).toBe(EXPECTED_SWIFT_VALIDATION_RESULT);
+		expect(swiftContent).toBe(EXPECTED_SWIFT_RESULT);
 	});
 
 	it("should fail with invalid config file", async () => {
@@ -139,7 +119,7 @@ describe("CLI", () => {
 		);
 		expect(
 			generateCode({
-				inputPath: path.join(TEST_DIR, "validation-result.ts"),
+				inputPath: path.join(TEST_DIR, "src", "results.ts"),
 				outputPath: path.join(TEST_DIR, "output"),
 				configPath: path.join(TEST_DIR, "invalid-config.json"),
 			}),
@@ -151,15 +131,15 @@ describe("CLI", () => {
 			generateCode({
 				inputPath: path.join(TEST_DIR, "nonexistent.ts"),
 				outputPath: path.join(TEST_DIR, "output"),
-				configPath: path.join(TEST_DIR, "config.json"),
+				configPath: path.join(TEST_DIR, "src", "config.json"),
 			}),
-		).rejects.toThrow("ENOENT");
+		).rejects.toThrow("Input file not found");
 	});
 
 	it("should fail with nonexistent config file", () => {
 		expect(
 			generateCode({
-				inputPath: path.join(TEST_DIR, "validation-result.ts"),
+				inputPath: path.join(TEST_DIR, "src", "results.ts"),
 				outputPath: path.join(TEST_DIR, "output"),
 				configPath: path.join(TEST_DIR, "nonexistent.json"),
 			}),
@@ -168,9 +148,9 @@ describe("CLI", () => {
 
 	it("should create output directories if they don't exist", async () => {
 		await generateCode({
-			inputPath: path.join(TEST_DIR, "validation-result.ts"),
+			inputPath: path.join(TEST_DIR, "src", "results.ts"),
 			outputPath: path.join(TEST_DIR, "deeply", "nested", "output"),
-			configPath: path.join(TEST_DIR, "config.json"),
+			configPath: path.join(TEST_DIR, "src", "config.json"),
 			languages: ["kotlin"],
 		});
 
@@ -182,22 +162,15 @@ describe("CLI", () => {
 					"nested",
 					"output",
 					"kotlin",
-					"ValidationResult.kt",
+					"Results.kt",
 				),
 			),
 		).toBe(true);
 
 		const kotlinContent = await fs.readFile(
-			path.join(
-				TEST_DIR,
-				"deeply",
-				"nested",
-				"output",
-				"kotlin",
-				"ValidationResult.kt",
-			),
+			path.join(TEST_DIR, "deeply", "nested", "output", "kotlin", "Results.kt"),
 			"utf-8",
 		);
-		expect(kotlinContent).toBe(EXPECTED_KOTLIN_VALIDATION_RESULT);
+		expect(kotlinContent).toBe(EXPECTED_KOTLIN_RESULT);
 	});
 });

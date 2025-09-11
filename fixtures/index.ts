@@ -1,5 +1,16 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Helper function to get the path to the user example fixtures
+export function getUserExamplePath() {
+	return path.join(
+		path.dirname(fileURLToPath(import.meta.url)),
+		"user-example",
+	);
+}
+
 // Helper function to create test data for TypeScript to Swift/Kotlin generation tests
-export function createTestData() {
+export function createCodegenFixtures() {
 	return {
 		stringType: `
 export interface StringRecord {
