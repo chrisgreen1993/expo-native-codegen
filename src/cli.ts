@@ -23,15 +23,21 @@ function getPascalCaseFilename(inputPath: string): string {
 }
 
 // Given a TypeScript file, bundle the file and dependencies into a single .d.ts file
-async function bundleTypeScriptFiles(inputPath: string): Promise<string> {
+async function bundleTypeScriptFiles(
+	inputPath: string,
+	tsConfigPath?: string,
+): Promise<string> {
 	try {
 		// Check if input file exists
 		await fs.access(inputPath);
 
 		// This will use the tsconfig.json in the same directory as the input file by default
-		const [bundledContent] = generateDtsBundle([
-			{ filePath: inputPath, output: { noBanner: true } },
-		]);
+		const [bundledContent] = generateDtsBundle(
+			[{ filePath: inputPath, output: { noBanner: true } }],
+			{
+				preferredConfigPath: tsConfigPath,
+			},
+		);
 
 		return bundledContent ?? "";
 	} catch (error) {
@@ -49,6 +55,7 @@ export interface CodegenOptions {
 	outputPath: string;
 	configPath: string;
 	languages?: Language[];
+	tsConfigPath?: string;
 }
 
 export async function generateCode({
@@ -56,6 +63,7 @@ export async function generateCode({
 	outputPath,
 	configPath,
 	languages = SUPPORTED_LANGUAGES,
+	tsConfigPath,
 }: CodegenOptions): Promise<void> {
 	// Read config
 	const configContent = await fs.readFile(configPath, "utf-8");
@@ -66,7 +74,7 @@ export async function generateCode({
 	}
 
 	// Bundle TypeScript files into a single .d.ts
-	const inputContent = await bundleTypeScriptFiles(inputPath);
+	const inputContent = await bundleTypeScriptFiles(inputPath, tsConfigPath);
 	// biome-ignore lint/suspicious/noConsole: CLI output
 	console.log(`Bundled TypeScript files from: ${inputPath}`);
 
@@ -122,6 +130,11 @@ async function main() {
 				description: "Languages to generate",
 				default: SUPPORTED_LANGUAGES,
 			})
+			.option("tsconfig", {
+				alias: "t",
+				type: "string",
+				description: "TSConfig file path",
+			})
 			.help()
 			.alias("help", "h").argv;
 
@@ -130,6 +143,7 @@ async function main() {
 			outputPath: argv.output,
 			configPath: argv.config,
 			languages: argv.lang,
+			tsConfigPath: argv.tsconfig,
 		});
 	} catch (error) {
 		// biome-ignore lint/suspicious/noConsole: CLI error output
