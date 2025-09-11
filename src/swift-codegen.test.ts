@@ -11,7 +11,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct StringRecord: Record {
+			  struct StringRecord: Record {
 			    @Field
 			    var name: String = ""
 
@@ -26,7 +26,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct NumberRecord: Record {
+			  struct NumberRecord: Record {
 			    @Field
 			    var age: Double = 0.0
 
@@ -41,7 +41,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct BooleanRecord: Record {
+			  struct BooleanRecord: Record {
 			    @Field
 			    var isActive: Bool = false
 
@@ -56,7 +56,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct AnyTypeRecord: Record {
+			  struct AnyTypeRecord: Record {
 			    @Field
 			    var genericData: Any = [:]
 
@@ -73,7 +73,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct StringArrayRecord: Record {
+			  struct StringArrayRecord: Record {
 			    @Field
 			    var tags: [String] = []
 
@@ -88,7 +88,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct NumberArrayRecord: Record {
+			  struct NumberArrayRecord: Record {
 			    @Field
 			    var scores: [Double] = []
 
@@ -103,7 +103,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct BooleanArrayRecord: Record {
+			  struct BooleanArrayRecord: Record {
 			    @Field
 			    var flags: [Bool] = []
 
@@ -120,7 +120,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct StringMapRecord: Record {
+			  struct StringMapRecord: Record {
 			    @Field
 			    var metadata: [String: String] = [:]
 
@@ -135,7 +135,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct AnyMapRecord: Record {
+			  struct AnyMapRecord: Record {
 			    @Field
 			    var config: [String: Any] = [:]
 
@@ -186,7 +186,7 @@ describe("Swift Code Generation", () => {
 			    case active = "ACTIVE"
 			  }
 
-			  public struct EnumRecord: Record {
+			  struct EnumRecord: Record {
 			    @Field
 			    var status: Status = .pending
 
@@ -206,7 +206,7 @@ describe("Swift Code Generation", () => {
 			    case DOWN = 1
 			  }
 
-			  public struct EnumRecord: Record {
+			  struct EnumRecord: Record {
 			    @Field
 			    var direction: Direction = .UP
 
@@ -223,7 +223,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct OptionalUnionRecord: Record {
+			  struct OptionalUnionRecord: Record {
 			    @Field
 			    var description: String? = nil
 
@@ -243,7 +243,7 @@ describe("Swift Code Generation", () => {
 			    case active = "active"
 			  }
 
-			  public struct AliasUnionRecord: Record {
+			  struct AliasUnionRecord: Record {
 			    @Field
 			    var status: Status = .pending
 
@@ -264,7 +264,7 @@ describe("Swift Code Generation", () => {
 			    case _3 = 3
 			  }
 
-			  public struct PriorityRecord: Record {
+			  struct PriorityRecord: Record {
 			    @Field
 			    var level: Level = ._1
 
@@ -284,7 +284,7 @@ describe("Swift Code Generation", () => {
 			    case active = \"active\"
 			  }
 
-			  public struct InlineUnionRecord: Record {
+			  struct InlineUnionRecord: Record {
 			    @Field
 			    var status: Pending_Active_Union = .pending
 
@@ -306,7 +306,7 @@ describe("Swift Code Generation", () => {
 			    case _3 = 3
 			  }
 
-			  public struct PriorityRecord: Record {
+			  struct PriorityRecord: Record {
 			    @Field
 			    var level: 1_2_3_NumericUnion = ._1
 
@@ -324,7 +324,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct BinaryDataRecord: Record {
+			  struct BinaryDataRecord: Record {
 			    @Field
 			    var data: Data = Data()
 
@@ -341,7 +341,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct Address: Record {
+			  struct Address: Record {
 			    @Field
 			    var street: String = ""
 
@@ -349,7 +349,7 @@ describe("Swift Code Generation", () => {
 			    var city: String = ""
 			  }
 
-			  public struct NestedRecord: Record {
+			  struct NestedRecord: Record {
 			    @Field
 			    var address: Address = Address()
 
@@ -364,7 +364,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct Address: Record {
+			  struct Address: Record {
 			    @Field
 			    var street: String = ""
 
@@ -372,7 +372,7 @@ describe("Swift Code Generation", () => {
 			    var city: String = ""
 			  }
 
-			  public struct NestedArrayRecord: Record {
+			  struct NestedArrayRecord: Record {
 			    @Field
 			    var addresses: [Address] = []
 
@@ -389,7 +389,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct UserProfile: Record {
+			  struct UserProfile: Record {
 			    @Field
 			    var email: String = ""
 
@@ -397,7 +397,7 @@ describe("Swift Code Generation", () => {
 			    var age: Double = 0.0
 			  }
 
-			  public struct User: Record {
+			  struct User: Record {
 			    @Field
 			    var profile: UserProfile = UserProfile()
 
@@ -419,7 +419,7 @@ describe("Swift Code Generation", () => {
 			expect(result).toMatchInlineSnapshot(`
 			  "import ExpoModulesCore
 
-			  public struct EmptyRecord: Record {}"
+			  struct EmptyRecord: Record {}"
 			`);
 		});
 
@@ -439,7 +439,7 @@ describe("Swift Code Generation", () => {
 				  case INACTIVE = "inactive"
 				}
 
-				public struct UserProfile: Record {
+				struct UserProfile: Record {
 				  @Field
 				  var email: String = ""
 
@@ -447,7 +447,7 @@ describe("Swift Code Generation", () => {
 				  var age: Double = 0.0
 				}
 
-				public struct User: Record {
+				struct User: Record {
 				  @Field
 				  var profile: UserProfile = UserProfile()
 

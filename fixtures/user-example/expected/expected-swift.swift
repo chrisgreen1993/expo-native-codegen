@@ -11,7 +11,7 @@ enum Priority: Int, Enumerable {
   case High = 2
 }
 
-public struct Address: Record {
+struct Address: Record {
   @Field
   var street: String = ""
 
@@ -22,7 +22,7 @@ public struct Address: Record {
   var zip: String? = nil
 }
 
-public struct UserProfile: Record {
+struct UserProfile: Record {
   @Field
   var email: String = ""
 
@@ -30,7 +30,7 @@ public struct UserProfile: Record {
   var age: Double = 0.0
 }
 
-public struct User: Record {
+struct User: Record {
   @Field
   var id: Double = 0.0
 
@@ -65,7 +65,7 @@ public struct User: Record {
   var optionalData: Data? = nil
 }
 
-public struct ValidationResult: Record {
+struct ValidationResult: Record {
   @Field
   var isValid: Bool = false
 

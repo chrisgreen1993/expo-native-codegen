@@ -130,7 +130,7 @@ function generateSwiftRecordFromIR(
 	const properties = recordDecl.properties;
 
 	if (properties.length === 0) {
-		return `public struct ${recordDecl.name}: Record {}`;
+		return `struct ${recordDecl.name}: Record {}`;
 	}
 
 	const propertyFields = properties
@@ -150,7 +150,7 @@ function generateSwiftRecordFromIR(
 		})
 		.join("\n\n");
 
-	return `public struct ${interfaceName}: Record {
+	return `struct ${interfaceName}: Record {
 ${propertyFields}
 }`;
 }

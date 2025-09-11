@@ -111,7 +111,7 @@ export interface Address {
 
 ```swift
 // Swift - Comprehensive example showing all supported types
-public struct ExampleRecord: Record {
+struct ExampleRecord: Record {
   // Primitive types
   @Field
   var name: String = ""
@@ -198,7 +198,7 @@ enum 1_2_3_NumericUnion: Int, Enumerable {
 }
 
 // Nested Record must conform to Record protocol
-public struct Address: Record {
+struct Address: Record {
   @Field
   var street: String = ""
   
