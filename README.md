@@ -1,4 +1,4 @@
-# Expo Native CodeGen
+# 🚧 (WIP - Pre-release) Expo Native CodeGen
 
 A Node.js library and CLI tool for generating Expo Native code from TypeScript definitions.
 
